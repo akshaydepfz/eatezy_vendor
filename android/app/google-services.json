@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "366816004932",
+    "project_id": "eatezy-63f35",
+    "storage_bucket": "eatezy-63f35.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366816004932:android:70b3436a8841a5193de511",
+        "android_client_info": {
+          "package_name": "com.eatezy.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADpyWR_hX3RnNl1G5ixb9zkVvJkXdLx7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366816004932:android:d56a711fe9014d703de511",
+        "android_client_info": {
+          "package_name": "com.eatezy_vendor.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADpyWR_hX3RnNl1G5ixb9zkVvJkXdLx7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
