@@ -14,6 +14,7 @@ class OrderService extends ChangeNotifier {
   List<CartModel> inTransist = [];
   List<CartModel> delivered = [];
   List<CartModel> readyForPickup = [];
+  List<CartModel> totalOrders = [];
   List<CustomerModel> customers = [];
 
   Future<void> fetchOrders() async {
@@ -29,6 +30,11 @@ class OrderService extends ChangeNotifier {
           .where('vendor_id', isEqualTo: token)
           .get();
 
+      totalOrders = snapshot.docs.map((doc) {
+        return CartModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+      notifyListeners();
       for (QueryDocumentSnapshot doc in snapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
@@ -59,6 +65,33 @@ class OrderService extends ChangeNotifier {
     } catch (e) {
       print('Error fetching products: $e');
     }
+  }
+
+  double calculateTotalEarnings() {
+    double totalEarnings = 0.0;
+
+    for (var cart in totalOrders) {
+      double orderTotal = 0.0;
+
+      // Calculate total for products in this cart
+      for (var product in cart.products) {
+        orderTotal += product.price * product.quantity;
+      }
+
+      if (cart.discount.isNotEmpty && cart.discount != 'null') {
+        try {
+          double discountPercent = double.parse(cart.discount);
+          double discountAmount = orderTotal * (discountPercent / 100);
+          orderTotal -= discountAmount;
+        } catch (e) {
+          print('If discount parsing fails, ignore discount');
+        }
+      }
+
+      totalEarnings += orderTotal;
+    }
+
+    return totalEarnings;
   }
 
   CustomerModel? findCustomerById(String id) {

@@ -20,222 +20,251 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     Provider.of<OrderService>(context, listen: false).fetchOrders();
     Provider.of<OrderService>(context, listen: false).fetchCustomers();
-
     Provider.of<HomeProvider>(context, listen: false).updateAdminFcmToken();
-
+    Provider.of<HomeProvider>(context, listen: false).fetchVendor();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<HomeProvider>(context);
+
+    final p = Provider.of<OrderService>(context);
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello KFC',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
-                AppSpacing.h10,
-                Container(
-                  padding: EdgeInsets.all(20),
-                  height: 200,
-                  width: MediaQuery.of(context).size.width,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: AppColor.primary),
+      body: provider.vendor == null
+          ? Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(15.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Total Orders',
-                            style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width / 1.5,
+                            child: Text(
+                              'Hello ${provider.vendor!.shopName}',
+                              maxLines: 2,
+                              style: TextStyle(
+                                  fontSize: 22, fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          Text(
-                            '223',
-                            style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
+                          CircleAvatar(
+                            backgroundImage:
+                                NetworkImage(provider.vendor!.shopImage),
+                          )
                         ],
+                      ),
+                      AppSpacing.h10,
+                      Container(
+                        padding: EdgeInsets.all(20),
+                        height: 200,
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: AppColor.primary),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Total Orders',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  p.delivered.length.toString(),
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Total Earnings',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  "₹${p.calculateTotalEarnings().toString()}",
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      AppSpacing.h10,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Active Status',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          Switch(
+                              value: provider.vendor!.isActive,
+                              onChanged: (v) {
+                                provider.onStatusChanged(v);
+                              })
+                        ],
+                      ),
+                      AppSpacing.h10,
+                      Divider(
+                        color: AppColor.lightGrey,
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Total Earnings',
-                            style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                            'New Orders',
+                            style: TextStyle(fontSize: 16),
                           ),
-                          Text(
-                            '20.000',
-                            style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
+                          TextButton(onPressed: () {}, child: Text('See All'))
                         ],
                       ),
+                      Consumer<OrderService>(builder: (context, p, _) {
+                        return ListView.builder(
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: p.pendingOrders.length,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              margin: EdgeInsets.only(bottom: 15),
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border:
+                                      Border.all(color: Colors.grey.shade300)),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AppSpacing.h10,
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(DateFormat('MMM d yyyy').format(
+                                          DateTime.parse(p.pendingOrders[index]
+                                              .createdDate))),
+                                      Container(
+                                        width: 75,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          color: p.pendingOrders[index].isPaid
+                                              ? const Color(0xFFD1EEDB)
+                                              : Colors.red.withOpacity(0.2),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            'Unpaid',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color:
+                                                  p.pendingOrders[index].isPaid
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  ListView.builder(
+                                      physics: NeverScrollableScrollPhysics(),
+                                      shrinkWrap: true,
+                                      itemCount: p
+                                          .pendingOrders[index].products.length,
+                                      itemBuilder: (context, i) {
+                                        return ListTile(
+                                          contentPadding:
+                                              EdgeInsets.symmetric(vertical: 3),
+                                          leading: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            child: SizedBox(
+                                              height: 50,
+                                              width: 50,
+                                              child: Image.network(
+                                                p.pendingOrders[index]
+                                                    .products[i].image,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                          title: Text(
+                                            p.pendingOrders[index].products[i]
+                                                .name,
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          subtitle: Text(
+                                            "X ${p.pendingOrders[index].products[i].quantity}"
+                                                .toString(),
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                          trailing: Text(
+                                            "₹${p.pendingOrders[index].products[i].price * p.pendingOrders[index].products[i].quantity}",
+                                            style: TextStyle(fontSize: 16),
+                                          ),
+                                        );
+                                      }),
+                                  AppSpacing.h20,
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  OrderDetailsScreen(
+                                                      order: p.pendingOrders[
+                                                          index])));
+                                    },
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width,
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          color: AppColor.primary),
+                                      padding: EdgeInsets.all(15),
+                                      child: Center(
+                                          child: Text(
+                                        'View Details',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      )),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      }),
                     ],
                   ),
                 ),
-                AppSpacing.h10,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Active Status',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    Switch(value: true, onChanged: (v) {})
-                  ],
-                ),
-                AppSpacing.h10,
-                Divider(
-                  color: AppColor.lightGrey,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'New Orders',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    TextButton(onPressed: () {}, child: Text('See All'))
-                  ],
-                ),
-                Consumer<OrderService>(builder: (context, p, _) {
-                  return ListView.builder(
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: p.pendingOrders.length,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 15),
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppSpacing.h10,
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(DateFormat('MMM d yyyy').format(
-                                    DateTime.parse(
-                                        p.pendingOrders[index].createdDate))),
-                                Container(
-                                  width: 75,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    color: p.pendingOrders[index].isPaid
-                                        ? const Color(0xFFD1EEDB)
-                                        : Colors.red.withOpacity(0.2),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Unpaid',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: p.pendingOrders[index].isPaid
-                                            ? Colors.green
-                                            : Colors.red,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                            ListView.builder(
-                                physics: NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount:
-                                    p.pendingOrders[index].products.length,
-                                itemBuilder: (context, i) {
-                                  return ListTile(
-                                    contentPadding:
-                                        EdgeInsets.symmetric(vertical: 3),
-                                    leading: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: SizedBox(
-                                        height: 50,
-                                        width: 50,
-                                        child: Image.network(
-                                          p.pendingOrders[index].products[i]
-                                              .image,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                    title: Text(
-                                      p.pendingOrders[index].products[i].name,
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    subtitle: Text(
-                                      "X ${p.pendingOrders[index].products[i].quantity}"
-                                          .toString(),
-                                      style: TextStyle(fontSize: 14),
-                                    ),
-                                    trailing: Text(
-                                      "₹${p.pendingOrders[index].products[i].price * p.pendingOrders[index].products[i].quantity}",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  );
-                                }),
-                            AppSpacing.h20,
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            OrderDetailsScreen(
-                                                order:
-                                                    p.pendingOrders[index])));
-                              },
-                              child: Container(
-                                width: MediaQuery.of(context).size.width,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: AppColor.primary),
-                                padding: EdgeInsets.all(15),
-                                child: Center(
-                                    child: Text(
-                                  'View Details',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                )),
-                              ),
-                            )
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

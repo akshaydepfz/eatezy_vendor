@@ -9,7 +9,7 @@ class VendorModel {
   final String shopAddress;
   final String vendorImage;
   final String shopImage;
-  final bool isActive;
+  bool isActive;
   final String estimateTime;
   final String estimateDistance;
   final String lat;
