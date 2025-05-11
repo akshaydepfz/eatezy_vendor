@@ -54,7 +54,7 @@ class OrderService extends ChangeNotifier {
           notifyListeners();
         }
       }
-
+      print(pendingOrders.length);
       notifyListeners();
     } catch (e) {
       print('Error fetching products: $e');
@@ -92,6 +92,7 @@ class OrderService extends ChangeNotifier {
         backgroundColor: Colors.black,
       ),
     );
+    Navigator.pop(context);
     sendFCMMessage(findCustomerById(userId)!.token, 'Your Order Confimred');
     fetchOrders();
   }
@@ -112,6 +113,7 @@ class OrderService extends ChangeNotifier {
     // );
     sendFCMMessage(
         findCustomerById(userId)!.token, 'Your Order Ready for pickup');
+    Navigator.pop(context);
     fetchOrders();
   }
 
@@ -129,6 +131,7 @@ class OrderService extends ChangeNotifier {
     //     backgroundColor: Colors.black,
     //   ),
     // );
+    Navigator.pop(context);
     sendFCMMessage(findCustomerById(userId)!.token, 'Your Order is Completeds');
     fetchOrders();
   }
