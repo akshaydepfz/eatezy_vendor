@@ -2,6 +2,7 @@ import 'package:eatezy_vendor/utils/app_color.dart';
 import 'package:eatezy_vendor/utils/app_spacing.dart';
 import 'package:eatezy_vendor/utils/app_style.dart';
 import 'package:eatezy_vendor/view/product/screens/add_product_screen.dart';
+import 'package:eatezy_vendor/view/product/screens/product_edit_screen.dart';
 import 'package:eatezy_vendor/view/product/services/product_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,7 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Products'),
+        title: Text('Menu'),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -32,7 +33,7 @@ class _ProductScreenState extends State<ProductScreen> {
               MaterialPageRoute(builder: (context) => AddProductScreen()));
         },
         icon: Icon(Icons.add),
-        label: Text('Add Product'),
+        label: Text('Add Menu'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -57,12 +58,12 @@ class _ProductScreenState extends State<ProductScreen> {
                               sold: "0",
                               productId: p.products![i].id.substring(0, 8),
                               onTap: () {
-                                // Navigator.push(
-                                //     context,
-                                //     MaterialPageRoute(
-                                //         builder: (context) => ProductEditScreen(
-                                //               product: p.products![i],
-                                //             )));
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ProductEditScreen(
+                                              product: p.products![i],
+                                            )));
                               },
                             );
                           }),

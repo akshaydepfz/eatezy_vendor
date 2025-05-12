@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductService extends ChangeNotifier {
   File? image;
+  String? NetworkImage;
   bool isLoading = false;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ImagePicker _picker = ImagePicker();
@@ -22,6 +23,90 @@ class ProductService extends ChangeNotifier {
   String? selectedItem;
   List<ProductModel>? products;
   List<CategoryModel>? category;
+
+  Future<void> onProductInit(ProductModel product) async {
+    String price = product.price.toString();
+    image = null;
+    String slashedPrice = product.slashedPrice.toString();
+    nameController.text = product.name;
+    descriptionController.text = product.description;
+    priceController.text = price;
+    mrpController.text = slashedPrice;
+    NetworkImage = product.image;
+  }
+
+  void clear() {
+    nameController.clear();
+    descriptionController.clear();
+    priceController.clear();
+    mrpController.clear();
+    NetworkImage = null;
+  }
+
+  Future<void> updateProduct(BuildContext context, String id) async {
+    isLoading = true;
+    notifyListeners();
+    if (image != null) {
+      String imageUrl = await uploadImageToStorage(image!);
+      await _firestore.collection('products').doc(id).set({
+        'image': imageUrl,
+        'name': nameController.text,
+        'description': descriptionController.text,
+        'category': selectedItem,
+        'price': priceController.text,
+        'slashedPrice': mrpController.text,
+        'lastEdited': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      fetchProducts();
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("product Updated Success")),
+      );
+      isLoading = false;
+      notifyListeners();
+    } else {
+      isLoading = true;
+      notifyListeners();
+      try {
+        await _firestore.collection('products').doc(id).set({
+          'name': nameController.text,
+          'description': descriptionController.text,
+          'category': selectedItem,
+          'price': priceController.text,
+          'slashedPrice': mrpController.text,
+          'lastEdited': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        isLoading = false;
+        notifyListeners();
+        fetchProducts();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("product Updated Success")),
+        );
+      } on FirebaseException catch (e) {
+        isLoading = false;
+        notifyListeners();
+        print('Failed to add user: ${e.message}');
+      } catch (e) {
+        isLoading = false;
+        notifyListeners();
+        print('An unexpected error occurred: $e');
+      }
+    }
+  }
+
+  Future<void> deleteProdut(BuildContext context, String id) async {
+    isLoading = true;
+    notifyListeners();
+    await _firestore.collection('products').doc(id).delete();
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("product deleted Success")),
+    );
+    fetchProducts();
+    isLoading = false;
+    notifyListeners();
+  }
 
   Future<void> fetchProducts() async {
     try {

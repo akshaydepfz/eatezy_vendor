@@ -241,6 +241,48 @@ class OrderDetailsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                AppSpacing.h15,
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text("Confirm Cancelation"),
+                            content:
+                                Text("Are you sure you want cancel the order?"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context)
+                                    .pop(), // Dismiss dialog
+                                child: Text("Cancel"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  provider.cancellOrder(context, order.id);
+                                },
+                                child: Text("Yes"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.red),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.red.shade100),
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'CANCEL ORDER',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ),
+                )
               ],
             ),
           ),

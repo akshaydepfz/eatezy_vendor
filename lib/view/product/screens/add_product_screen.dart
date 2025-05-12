@@ -5,15 +5,26 @@ import 'package:eatezy_vendor/view/product/services/product_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class AddProductScreen extends StatelessWidget {
+class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
+
+  @override
+  State<AddProductScreen> createState() => _AddProductScreenState();
+}
+
+class _AddProductScreenState extends State<AddProductScreen> {
+  @override
+  void initState() {
+    Provider.of<ProductService>(context, listen: false).clear();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProductService>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Product'),
+        title: Text('Add Menu'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -63,7 +74,7 @@ class AddProductScreen extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Enter product description'),
+                    const Text('Enter item description'),
                     AppSpacing.h10,
                     TextField(
                       controller: provider.descriptionController,
@@ -81,7 +92,7 @@ class AddProductScreen extends StatelessWidget {
                   ],
                 ),
                 AppSpacing.h10,
-                const Text('Select product category'),
+                const Text('Select item category'),
                 AppSpacing.h10,
                 FutureBuilder<List<CategoryModel>?>(
                   future: provider.fetchCategory(),
@@ -126,7 +137,7 @@ class AddProductScreen extends StatelessWidget {
                     controller: provider.priceController),
                 AppSpacing.h20,
                 PrimaryButton(
-                    title: 'Add Product',
+                    title: 'Add Menu',
                     isLoading: provider.isLoading,
                     onTap: () => provider.addProduct(context))
               ],

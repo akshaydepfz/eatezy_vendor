@@ -1,11 +1,13 @@
 import 'package:eatezy_vendor/utils/app_color.dart';
 import 'package:eatezy_vendor/utils/app_spacing.dart';
+import 'package:eatezy_vendor/view/auth/screens/login_screen.dart';
 import 'package:eatezy_vendor/view/chat/screens/chat_screen.dart';
 
 import 'package:eatezy_vendor/view/profile/screens/edit_profile_screen.dart';
 import 'package:eatezy_vendor/view/profile/service/profile_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -109,7 +111,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: Icon(Icons.arrow_forward_ios),
                 ),
                 ListTile(
-                  onTap: () {},
+                  onTap: () async {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text("Confirm Logout"),
+                          content: Text("Are you sure you want to logout?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.of(context).pop(), // Dismiss dialog
+                              child: Text("Cancel"),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                final pref =
+                                    await SharedPreferences.getInstance();
+                                pref.clear();
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const LoginScreen()),
+                                  (Route<dynamic> route) => false,
+                                );
+                              },
+                              child: Text("Logout"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                   leading: Icon(
                     Icons.logout,
                     color: Colors.red,

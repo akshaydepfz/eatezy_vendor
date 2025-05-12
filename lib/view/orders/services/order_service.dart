@@ -17,6 +17,19 @@ class OrderService extends ChangeNotifier {
   List<CartModel> totalOrders = [];
   List<CustomerModel> customers = [];
 
+  Future<void> cancellOrder(BuildContext context, String id) async {
+    await FirebaseFirestore.instance
+        .collection('cart')
+        .doc(id)
+        .update({"isCancelled": true});
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Order Cancelled by you!")),
+    );
+
+    fetchOrders();
+  }
+
   Future<void> fetchOrders() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
