@@ -3,7 +3,7 @@ import 'package:eatezy_vendor/utils/app_color.dart';
 import 'package:eatezy_vendor/view/home/services/home_provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -20,22 +20,22 @@ class _LandingScreenState extends State<LandingScreen> {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
-        flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              channelDescription: channel.description,
-              importance: Importance.high,
-              color: Colors.blue,
-              playSound: true,
-              icon: '@mipmap/ic_launcher',
-            ),
-          ),
-        );
+        // flutterLocalNotificationsPlugin.show(
+        //   notification.hashCode,
+        //   notification.title,
+        //   notification.body,
+        //   NotificationDetails(
+        //     android: AndroidNotificationDetails(
+        //       channel.id,
+        //       channel.name,
+        //       channelDescription: channel.description,
+        //       importance: Importance.high,
+        //       color: Colors.blue,
+        //       playSound: true,
+        //       icon: '@mipmap/ic_launcher',
+        //     ),
+        //   ),
+        // );
       }
     });
 
