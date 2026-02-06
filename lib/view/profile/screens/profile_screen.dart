@@ -119,18 +119,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: Icon(Icons.arrow_forward_ios),
                 ),
                 ListTile(
-                  onTap: () {},
-                  leading: Icon(
-                    Icons.support_agent,
-                    color: AppColor.primary,
-                  ),
-                  title: Text(
-                    'Support ',
-                    style: TextStyle(fontSize: 17),
-                  ),
-                  trailing: Icon(Icons.arrow_forward_ios),
-                ),
-                ListTile(
                   onTap: () async {
                     showDialog(
                       context: context,

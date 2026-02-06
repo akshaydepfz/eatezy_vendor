@@ -206,9 +206,6 @@ class _ProductEditScreenState extends State<ProductEditScreen> {
                     title: 'Enter Item MRP Price',
                     controller: provider.mrpController),
                 AppSpacing.h20,
-                PrimaryTextField(
-                    title: 'Preparation time (e.g. 15 mins)',
-                    controller: provider.preparationTimeController),
                 AppSpacing.h20,
                 SizedBox(
                   height: 55,

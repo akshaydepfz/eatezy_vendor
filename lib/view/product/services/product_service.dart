@@ -20,7 +20,6 @@ class ProductService extends ChangeNotifier {
   TextEditingController unitController = TextEditingController();
   TextEditingController mrpController = TextEditingController();
   TextEditingController priceController = TextEditingController();
-  TextEditingController preparationTimeController = TextEditingController();
   String? selectedItem;
   List<ProductModel>? products;
   List<CategoryModel>? category;
@@ -33,7 +32,6 @@ class ProductService extends ChangeNotifier {
     descriptionController.text = product.description;
     priceController.text = price;
     mrpController.text = slashedPrice;
-    preparationTimeController.text = product.preparationTime;
     selectedItem = product.category;
     NetworkImage = product.image;
   }
@@ -44,7 +42,6 @@ class ProductService extends ChangeNotifier {
     priceController.clear();
     mrpController.clear();
     unitController.clear();
-    preparationTimeController.clear();
     NetworkImage = null;
   }
 
@@ -60,7 +57,6 @@ class ProductService extends ChangeNotifier {
         'category': selectedItem,
         'price': priceController.text,
         'slashedPrice': mrpController.text,
-        'preparationTime': preparationTimeController.text,
         'lastEdited': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       await fetchProducts();
@@ -80,7 +76,6 @@ class ProductService extends ChangeNotifier {
           'category': selectedItem,
           'price': priceController.text,
           'slashedPrice': mrpController.text,
-          'preparationTime': preparationTimeController.text,
           'lastEdited': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         isLoading = false;
@@ -113,6 +108,21 @@ class ProductService extends ChangeNotifier {
     fetchProducts();
     isLoading = false;
     notifyListeners();
+  }
+
+  /// Toggle product availability (available / sold out) using is_active. Customers can filter by is_active.
+  Future<void> setProductAvailability(String productId, bool available) async {
+    try {
+      await _firestore.collection('products').doc(productId).set({
+        'is_active': available,
+        'lastEdited': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      await fetchProducts();
+      notifyListeners();
+    } catch (e) {
+      print('Error updating product availability: $e');
+      notifyListeners();
+    }
   }
 
   Future<void> fetchProducts() async {
@@ -210,7 +220,6 @@ class ProductService extends ChangeNotifier {
           'category': selectedItem,
           'price': priceController.text,
           'slashedPrice': mrpController.text,
-          'preparationTime': preparationTimeController.text,
           'totalSold': 0,
           'vendor_id': token,
           'is_flash_sale': false,
@@ -233,7 +242,6 @@ class ProductService extends ChangeNotifier {
         selectedItem = null;
         mrpController.clear();
         unitController.clear();
-        preparationTimeController.clear();
         image = null;
         isLoading = false;
 

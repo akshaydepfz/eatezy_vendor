@@ -185,6 +185,108 @@ class ProfileEditScreen extends StatelessWidget {
               ),
               AppSpacing.h20,
 
+              // Opening & closing time card
+              _SectionCard(
+                title: 'Opening & Closing Time',
+                subtitle: 'When your restaurant opens and closes',
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: provider.openingTime ??
+                              const TimeOfDay(hour: 9, minute: 0),
+                        );
+                        if (picked != null) provider.setOpeningTime(picked);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.schedule_rounded,
+                                color: AppColor.primary, size: 22),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Opening time',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              provider.openingTimeDisplay,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(Icons.chevron_right,
+                                color: Colors.grey.shade400, size: 22),
+                          ],
+                        ),
+                      ),
+                    ),
+                    AppSpacing.h10,
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: provider.closingTime ??
+                              const TimeOfDay(hour: 22, minute: 0),
+                        );
+                        if (picked != null) provider.setClosingTime(picked);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.schedule_rounded,
+                                color: AppColor.primary, size: 22),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Closing time',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              provider.closingTimeDisplay,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(Icons.chevron_right,
+                                color: Colors.grey.shade400, size: 22),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppSpacing.h20,
+
               // Location card
               _SectionCard(
                 title: 'Restaurant Location',

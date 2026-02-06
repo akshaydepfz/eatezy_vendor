@@ -19,6 +19,41 @@ class ProfileService extends ChangeNotifier {
   File? image2;
   bool isLoading = false;
 
+  /// Opening and closing time as TimeOfDay for picker; stored as "HH:mm" in Firestore.
+  TimeOfDay? openingTime;
+  TimeOfDay? closingTime;
+
+  static TimeOfDay? _parseTime(String time) {
+    final parts = time.split(':');
+    if (parts.length >= 2) {
+      final h = int.tryParse(parts[0]);
+      final m = int.tryParse(parts[1]);
+      if (h != null && m != null && h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+        return TimeOfDay(hour: h, minute: m);
+      }
+    }
+    return null;
+  }
+
+  static String _formatTime(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  void setOpeningTime(TimeOfDay time) {
+    openingTime = time;
+    notifyListeners();
+  }
+
+  void setClosingTime(TimeOfDay time) {
+    closingTime = time;
+    notifyListeners();
+  }
+
+  String get openingTimeDisplay =>
+      openingTime != null ? _formatTime(openingTime!) : '--:--';
+  String get closingTimeDisplay =>
+      closingTime != null ? _formatTime(closingTime!) : '--:--';
+
   Future<void> getVendor() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token') ?? "";
@@ -33,6 +68,8 @@ class ProfileService extends ChangeNotifier {
         latLng = LatLng(double.parse(vendor!.lat), double.parse(vendor!.long));
         nameController.text = vendor!.shopName;
         packingFeeController.text = vendor!.packingFee;
+        openingTime = _parseTime(vendor!.openingTime);
+        closingTime = _parseTime(vendor!.closingTime);
         notifyListeners();
       } else {}
     } catch (_) {}
@@ -90,6 +127,8 @@ class ProfileService extends ChangeNotifier {
       Map<String, dynamic> dataToUpdate = {
         "shop_name": nameController.text,
         "packing_fee": num.tryParse(packingFeeController.text.trim()) ?? 0,
+        if (openingTime != null) "opening_time": _formatTime(openingTime!),
+        if (closingTime != null) "closing_time": _formatTime(closingTime!),
       };
 
       if (image != null) {

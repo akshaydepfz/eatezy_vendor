@@ -146,9 +146,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     title: 'Selling Price',
                     controller: provider.priceController),
                 AppSpacing.h10,
-                PrimaryTextField(
-                    title: 'Preparation time (e.g. 15 mins)',
-                    controller: provider.preparationTimeController),
                 AppSpacing.h20,
                 PrimaryButton(
                     title: 'Add Menu',

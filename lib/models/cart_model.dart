@@ -1,3 +1,12 @@
+double _parsePackingFee(Map<String, dynamic> data) {
+  // Backend may use packing_fee, package_fee, or packing_charge
+  final value = data['packing_fee'] ?? data['package_fee'] ?? data['packing_charge'] ?? data['package_charge'];
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
+}
+
 class CartModel {
   String id;
   String uuid;
@@ -14,6 +23,7 @@ class CartModel {
   String cancellationReason;
   String deliveryType;
   bool isRated;
+  String ratingText;
   double rating;
   String confimedTime;
   String driverGoShopTime;
@@ -32,6 +42,9 @@ class CartModel {
   String totalPrice;
   String notes;
   double packingFee;
+
+  /// Estimated preparation time in minutes (set when vendor confirms order).
+  int preparationTimeMinutes;
   double platformCharge;
   List<OrderedProduct> products;
 
@@ -64,13 +77,15 @@ class CartModel {
       required this.vendorName,
       required this.shopImage,
       required this.vendorPhone,
+      required this.ratingText,
       required this.chatId,
       required this.products,
       required this.discount,
       required this.totalPrice,
       this.notes = '',
       this.packingFee = 0.0,
-      this.platformCharge = 0.0});
+      this.platformCharge = 0.0,
+      this.preparationTimeMinutes = 0});
 
   factory CartModel.fromFirestore(Map<String, dynamic> data, String id) {
     return CartModel(
@@ -101,6 +116,7 @@ class CartModel {
         customerImage: data['customer_image'] ?? '',
         vendorName: data['vendor_name'] ?? '',
         shopImage: data['shop_image'] ?? '',
+        ratingText: data['rating_text'] ?? '',
         vendorPhone: data['vendor_phone'] ?? '',
         chatId: data['chat_id'] ?? '',
         products: (data['products'] as List<dynamic>)
@@ -109,8 +125,11 @@ class CartModel {
         discount: data['discount'] ?? '',
         totalPrice: data['total'] ?? '',
         notes: data['notes'] ?? '',
-        packingFee: (data['packing_fee'] as num?)?.toDouble() ?? 0.0,
-        platformCharge: (data['platform_charge'] as num?)?.toDouble() ?? 0.0);
+        packingFee: _parsePackingFee(data),
+        platformCharge: (data['platform_charge'] as num?)?.toDouble() ?? 0.0,
+        preparationTimeMinutes: data['preparation_time'] != null
+            ? int.tryParse(data['preparation_time'].toString()) ?? 0
+            : 0);
   }
 
   Map<String, dynamic> toMap() {
@@ -149,6 +168,8 @@ class CartModel {
       'notes': notes,
       'packing_fee': packingFee,
       'platform_charge': platformCharge,
+      'preparation_time': preparationTimeMinutes,
+      'rating_text': ratingText,
     };
   }
 }

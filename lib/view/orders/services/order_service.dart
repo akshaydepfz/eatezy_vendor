@@ -16,7 +16,9 @@ class OrderService extends ChangeNotifier {
   List<CartModel> readyForPickup = [];
   List<CartModel> cancelledOrders = [];
   List<CartModel> totalOrders = [];
+  List<CartModel> ratedOrders = [];
   List<CustomerModel> customers = [];
+  bool isLoadingRatedOrders = false;
 
   Future<void> cancellOrder(BuildContext context, String id) async {
     await FirebaseFirestore.instance
@@ -85,28 +87,58 @@ class OrderService extends ChangeNotifier {
     }
   }
 
+  /// Fetches carts where is_rated == true and vendor_id == current vendor.
+  Future<void> fetchRatedOrders() async {
+    try {
+      isLoadingRatedOrders = true;
+      notifyListeners();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String token = prefs.getString('token') ?? '';
+      ratedOrders.clear();
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('cart')
+          .where('vendor_id', isEqualTo: token)
+          .where('is_rated', isEqualTo: true)
+          .get();
+      ratedOrders = snapshot.docs.map((doc) {
+        return CartModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+      // Sort by created date descending (latest first)
+      ratedOrders.sort((a, b) => b.createdDate.compareTo(a.createdDate));
+      isLoadingRatedOrders = false;
+      notifyListeners();
+    } catch (e) {
+      isLoadingRatedOrders = false;
+      notifyListeners();
+      print('Error fetching rated orders: $e');
+    }
+  }
+
   double calculateTotalEarnings() {
     double totalEarnings = 0.0;
 
     for (var cart in delivered) {
-      double orderTotal = 0.0;
-
-      // Calculate total for products in this cart
-      for (var product in cart.products) {
-        orderTotal += product.price * product.quantity;
-      }
-
-      if (cart.discount.isNotEmpty && cart.discount != 'null') {
-        try {
-          double discountPercent = double.parse(cart.discount);
-          double discountAmount = orderTotal * (discountPercent / 100);
-          orderTotal -= discountAmount;
-        } catch (e) {
-          print('If discount parsing fails, ignore discount');
+      // Prefer order's stored total (includes packing and any backend-applied charges)
+      final storedTotal = double.tryParse(cart.totalPrice);
+      double orderTotal;
+      if (storedTotal != null && storedTotal > 0) {
+        orderTotal = storedTotal - cart.platformCharge;
+      } else {
+        orderTotal = 0.0;
+        for (var product in cart.products) {
+          orderTotal += product.price * product.quantity;
         }
+        if (cart.discount.isNotEmpty && cart.discount != 'null') {
+          try {
+            double discountPercent = double.parse(cart.discount);
+            orderTotal -= orderTotal * (discountPercent / 100);
+          } catch (_) {}
+        }
+        orderTotal += cart.packingFee;
+        orderTotal -= cart.platformCharge;
       }
-
-      totalEarnings += orderTotal;
+      totalEarnings += orderTotal >= 0 ? orderTotal : 0;
     }
 
     return totalEarnings;
@@ -116,6 +148,28 @@ class OrderService extends ChangeNotifier {
     return customers.firstWhere(
       (vendor) => vendor.id == id,
     );
+  }
+
+  CartModel? getOrderById(String id) {
+    for (final list in [pendingOrders, inTransist, delivered, readyForPickup, cancelledOrders]) {
+      try {
+        return list.firstWhere((o) => o.id == id);
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  Future<void> updatePreparationTime(BuildContext context, String orderId, int minutes) async {
+    await FirebaseFirestore.instance
+        .collection('cart')
+        .doc(orderId)
+        .update({'preparation_time': minutes});
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preparation time updated')),
+      );
+    }
+    await fetchOrders();
   }
 
   Future<void> fetchCustomers() async {
@@ -130,11 +184,15 @@ class OrderService extends ChangeNotifier {
   }
 
   Future<void> acceptOrder(
-      BuildContext context, String id, String userId) async {
+      BuildContext context, String id, String userId, int preparationTimeMinutes) async {
     await FirebaseFirestore.instance
         .collection('cart')
         .doc(id)
-        .update({"order_status": "Order Accepted"});
+        .update({
+      "order_status": "Order Accepted",
+      "preparation_time": preparationTimeMinutes,
+      "confrimTime": DateTime.now().toIso8601String(),
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(

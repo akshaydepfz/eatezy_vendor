@@ -10,7 +10,8 @@ class ProductModel {
   double price;
   String slashedPrice;
   String unitPerItem;
-  String preparationTime;
+  /// Maps from Firestore is_active. When false, product is "sold out" (hidden from customers without deleting).
+  bool isAvailable;
 
   ProductModel({
     required this.id,
@@ -24,7 +25,7 @@ class ProductModel {
     required this.price,
     required this.slashedPrice,
     required this.unitPerItem,
-    this.preparationTime = '',
+    this.isAvailable = true,
   });
 
   // Create a factory method to map Firestore data to ProductModel
@@ -45,6 +46,6 @@ class ProductModel {
             : 0.0,
         slashedPrice: data['slashedPrice'],
         unitPerItem: data['unitPerItem'] ?? "",
-        preparationTime: data['preparationTime']?.toString() ?? '');
+        isAvailable: data['is_active'] is bool ? data['is_active'] as bool : true);
   }
 }
