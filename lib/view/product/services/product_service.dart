@@ -20,6 +20,7 @@ class ProductService extends ChangeNotifier {
   TextEditingController unitController = TextEditingController();
   TextEditingController mrpController = TextEditingController();
   TextEditingController priceController = TextEditingController();
+  TextEditingController preparationTimeController = TextEditingController();
   String? selectedItem;
   List<ProductModel>? products;
   List<CategoryModel>? category;
@@ -32,6 +33,8 @@ class ProductService extends ChangeNotifier {
     descriptionController.text = product.description;
     priceController.text = price;
     mrpController.text = slashedPrice;
+    preparationTimeController.text = product.preparationTime;
+    selectedItem = product.category;
     NetworkImage = product.image;
   }
 
@@ -40,6 +43,8 @@ class ProductService extends ChangeNotifier {
     descriptionController.clear();
     priceController.clear();
     mrpController.clear();
+    unitController.clear();
+    preparationTimeController.clear();
     NetworkImage = null;
   }
 
@@ -55,9 +60,10 @@ class ProductService extends ChangeNotifier {
         'category': selectedItem,
         'price': priceController.text,
         'slashedPrice': mrpController.text,
+        'preparationTime': preparationTimeController.text,
         'lastEdited': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      fetchProducts();
+      await fetchProducts();
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("product Updated Success")),
@@ -74,11 +80,12 @@ class ProductService extends ChangeNotifier {
           'category': selectedItem,
           'price': priceController.text,
           'slashedPrice': mrpController.text,
+          'preparationTime': preparationTimeController.text,
           'lastEdited': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         isLoading = false;
         notifyListeners();
-        fetchProducts();
+        await fetchProducts();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("product Updated Success")),
@@ -203,6 +210,7 @@ class ProductService extends ChangeNotifier {
           'category': selectedItem,
           'price': priceController.text,
           'slashedPrice': mrpController.text,
+          'preparationTime': preparationTimeController.text,
           'totalSold': 0,
           'vendor_id': token,
           'is_flash_sale': false,
@@ -224,6 +232,8 @@ class ProductService extends ChangeNotifier {
         priceController.clear();
         selectedItem = null;
         mrpController.clear();
+        unitController.clear();
+        preparationTimeController.clear();
         image = null;
         isLoading = false;
 

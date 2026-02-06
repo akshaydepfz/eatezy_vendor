@@ -14,6 +14,7 @@ class OrderService extends ChangeNotifier {
   List<CartModel> inTransist = [];
   List<CartModel> delivered = [];
   List<CartModel> readyForPickup = [];
+  List<CartModel> cancelledOrders = [];
   List<CartModel> totalOrders = [];
   List<CustomerModel> customers = [];
 
@@ -37,6 +38,8 @@ class OrderService extends ChangeNotifier {
       pendingOrders.clear();
       inTransist.clear();
       delivered.clear();
+      readyForPickup.clear();
+      cancelledOrders.clear();
 
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('cart')
@@ -68,8 +71,10 @@ class OrderService extends ChangeNotifier {
         } else if (data['isCancelled'] == false &&
             data['order_status'] == "Ready For Pickup" &&
             data['order_status'] != "Completed") {
-          readyForPickup = [];
           readyForPickup.add(CartModel.fromFirestore(data, doc.id));
+          notifyListeners();
+        } else if (data['isCancelled'] == true) {
+          cancelledOrders.add(CartModel.fromFirestore(data, doc.id));
           notifyListeners();
         }
       }
@@ -83,7 +88,7 @@ class OrderService extends ChangeNotifier {
   double calculateTotalEarnings() {
     double totalEarnings = 0.0;
 
-    for (var cart in totalOrders) {
+    for (var cart in delivered) {
       double orderTotal = 0.0;
 
       // Calculate total for products in this cart
@@ -169,17 +174,9 @@ class OrderService extends ChangeNotifier {
         .collection('cart')
         .doc(id)
         .update({"order_status": "Completed"});
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   const SnackBar(
-    //     content: Text(
-    //       "Order Completed by you",
-    //     ),
-    //     backgroundColor: Colors.black,
-    //   ),
-    // );
-    Navigator.pop(context);
     sendFCMMessage(findCustomerById(userId)!.token, 'Your Order is Completeds');
-    fetchOrders();
+    await fetchOrders();
+    if (context.mounted) Navigator.pop(context);
   }
 
   Future<String> getAccessToken() async {

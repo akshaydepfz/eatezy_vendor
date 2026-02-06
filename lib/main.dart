@@ -4,6 +4,7 @@ import 'package:eatezy_vendor/view/auth/services/login_service.dart';
 import 'package:eatezy_vendor/view/chat/services/chat_service.dart';
 import 'package:eatezy_vendor/view/home/screens/landing_screen.dart';
 import 'package:eatezy_vendor/view/home/services/home_provider.dart';
+import 'package:eatezy_vendor/view/offer/services/offer_service.dart';
 import 'package:eatezy_vendor/view/orders/services/order_service.dart';
 import 'package:eatezy_vendor/view/product/services/product_service.dart';
 import 'package:eatezy_vendor/view/profile/service/profile_service.dart';
@@ -73,6 +74,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => HomeProvider()),
         ChangeNotifierProvider(create: (context) => ProductService()),
+        ChangeNotifierProvider(create: (context) => OfferService()),
         ChangeNotifierProvider(create: (context) => OrderService()),
         ChangeNotifierProvider(create: (context) => LoginService()),
         ChangeNotifierProvider(create: (context) => ProfileService()),

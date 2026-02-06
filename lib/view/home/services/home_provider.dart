@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eatezy_vendor/models/vendor_model.dart';
 import 'package:eatezy_vendor/view/home/screens/home_screen.dart';
+import 'package:eatezy_vendor/view/offer/screens/offers_screen.dart';
 import 'package:eatezy_vendor/view/orders/screens/orders_screen.dart';
 import 'package:eatezy_vendor/view/product/screens/product_screen.dart';
 import 'package:eatezy_vendor/view/profile/screens/profile_screen.dart';
@@ -16,6 +17,7 @@ class HomeProvider extends ChangeNotifier {
     HomeScreen(),
     OrdersScreen(),
     ProductScreen(),
+    OffersScreen(),
     ProfileScreen(),
   ];
 
@@ -57,7 +59,10 @@ class HomeProvider extends ChangeNotifier {
     await FirebaseFirestore.instance
         .collection('vendors')
         .doc(token)
-        .update({"isActive": v});
+        .update({
+      "is_active": v,
+      "isActive": v,
+    });
     notifyListeners();
   }
 

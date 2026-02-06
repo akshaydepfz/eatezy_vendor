@@ -103,14 +103,24 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       return const Center(child: Text('No items found.'));
                     } else {
                       final items = snapshot.data!;
+                      // Deduplicate by name so each value appears exactly once
+                      final seen = <String>{};
+                      final uniqueItems = items
+                          .where((item) => seen.add(item.name))
+                          .toList();
+                      final validValue = provider.selectedItem != null &&
+                              uniqueItems
+                                  .any((item) => item.name == provider.selectedItem)
+                          ? provider.selectedItem
+                          : null;
 
                       return DropdownButtonFormField<String>(
                         decoration: const InputDecoration(
                           labelText: 'Select product category',
                           border: OutlineInputBorder(),
                         ),
-                        value: provider.selectedItem,
-                        items: items.map((item) {
+                        value: validValue,
+                        items: uniqueItems.map((item) {
                           return DropdownMenuItem<String>(
                             value: item.name,
                             child: Text(item.name),
@@ -135,6 +145,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 PrimaryTextField(
                     title: 'Selling Price',
                     controller: provider.priceController),
+                AppSpacing.h10,
+                PrimaryTextField(
+                    title: 'Preparation time (e.g. 15 mins)',
+                    controller: provider.preparationTimeController),
                 AppSpacing.h20,
                 PrimaryButton(
                     title: 'Add Menu',
@@ -156,10 +170,12 @@ class PrimaryTextField extends StatelessWidget {
     required this.title,
     required this.controller,
     this.validator = null,
+    this.keyboardType,
   });
   final String title;
   final TextEditingController controller;
-  FormFieldValidator<String>? validator;
+  final FormFieldValidator<String>? validator;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
@@ -171,6 +187,7 @@ class PrimaryTextField extends StatelessWidget {
         TextFormField(
           validator: validator,
           controller: controller,
+          keyboardType: keyboardType,
           decoration: const InputDecoration(
             border:
                 OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),

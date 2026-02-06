@@ -16,163 +16,342 @@ class ProfileEditScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProfileService>(context);
+    final hasBanner = provider.image2 != null ||
+        (provider.vendor?.banner != null && provider.vendor!.banner.isNotEmpty);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile Edit')),
+      backgroundColor: const Color(0xFFF5F6FA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColor.primary,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Edit Profile',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(15.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Your Restaurant Banner',
-                style: TextStyle(fontSize: 16),
-              ),
-              AppSpacing.h10,
-              // Background Image with Edit Icon
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 200,
-                      child: provider.image2 == null
-                          ? Image.network(
-                              provider.vendor!.banner,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(File(provider.image2!.path)),
-                    ),
-                  ),
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: GestureDetector(
-                      onTap: () {
-                        provider.pickImage2();
-                      },
-                      child: const CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Colors.black54,
-                        child: Icon(Icons.edit, size: 18, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              AppSpacing.h10,
-              Text(
-                'Your Restaurant Logo',
-                style: TextStyle(fontSize: 16),
-              ),
-              AppSpacing.h10,
-              Stack(
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white, width: 4),
-                      image: DecorationImage(
-                        image: provider.image == null
-                            ? NetworkImage(provider.vendor!.shopImage)
-                            : FileImage(
-                                File(provider.image!.path)), // 512x512 px
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  // Edit icon on avatar
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () => provider.pickImage(),
-                      child: const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Colors.black87,
-                        child: Icon(Icons.edit, size: 16, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              AppSpacing.h10,
-              PrimaryTextField(
-                  title: 'Restaurant Name',
-                  controller: provider.nameController),
-              AppSpacing.h20,
-              Text(
-                'Your Restaurant Location',
-                style: TextStyle(fontSize: 16),
-              ),
-              AppSpacing.h10,
-              Container(
-                height: 150,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey.shade300),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: provider.latLng != null
-                      ? FlutterMap(
-                          options: MapOptions(
-                            center: provider.latLng,
-                            zoom: 13.0,
-                            interactiveFlags:
-                                InteractiveFlag.none, // non-interactive preview
-                          ),
-                          children: [
-                            TileLayer(
-                              urlTemplate:
-                                  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                              subdomains: ['a', 'b', 'c'],
-                            ),
-                            MarkerLayer(
-                              markers: [
-                                Marker(
-                                  point: provider.latLng!,
-                                  width: 40,
-                                  height: 40,
-                                  child: Icon(Icons.location_on,
-                                      color: Colors.red, size: 40),
+              // Banner card
+              _SectionCard(
+                title: 'Restaurant Banner',
+                subtitle: 'Shown at the top of your profile',
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 200,
+                        child: hasBanner
+                            ? Image(
+                                image: provider.image2 != null
+                                    ? FileImage(provider.image2!)
+                                    : NetworkImage(provider.vendor!.banner)
+                                        as ImageProvider,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                color: Colors.grey.shade200,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.image_outlined,
+                                        size: 48,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      AppSpacing.h10,
+                                      Text(
+                                        'Tap to add banner',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ],
+                              ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: Material(
+                        color: AppColor.primary,
+                        borderRadius: BorderRadius.circular(24),
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: () => provider.pickImage2(),
+                          borderRadius: BorderRadius.circular(24),
+                          child: const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: Icon(
+                              Icons.camera_alt_rounded,
+                              color: Colors.white,
+                              size: 22,
                             ),
-                          ],
-                        )
-                      : Center(child: Text("No location selected")),
-                ),
-              ),
-              AppSpacing.h5,
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => OSMMapPicker()));
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      color: AppColor.primary),
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    'Edit Location',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               AppSpacing.h20,
+
+              // Logo & name card
+              _SectionCard(
+                title: 'Restaurant Logo & Name',
+                child: Column(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            image: DecorationImage(
+                              image: provider.image == null
+                                  ? NetworkImage(provider.vendor!.shopImage)
+                                  : FileImage(File(provider.image!.path))
+                                      as ImageProvider,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: -4,
+                          right: -4,
+                          child: Material(
+                            color: AppColor.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            elevation: 2,
+                            child: InkWell(
+                              onTap: () => provider.pickImage(),
+                              borderRadius: BorderRadius.circular(20),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8),
+                                child: Icon(
+                                  Icons.edit_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    AppSpacing.h15,
+                    PrimaryTextField(
+                      title: 'Restaurant Name',
+                      controller: provider.nameController,
+                    ),
+                  ],
+                ),
+              ),
+              AppSpacing.h20,
+
+              // Packing fee card
+              _SectionCard(
+                title: 'Packing Fee',
+                subtitle: 'Amount charged for packing (in your currency)',
+                child: PrimaryTextField(
+                  title: 'Packing Fee (e.g. 25)',
+                  controller: provider.packingFeeController,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              AppSpacing.h20,
+
+              // Location card
+              _SectionCard(
+                title: 'Restaurant Location',
+                subtitle: 'Your delivery / pickup address on map',
+                child: Column(
+                  children: [
+                    Container(
+                      height: 160,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                        color: Colors.grey.shade100,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: provider.latLng != null
+                            ? FlutterMap(
+                                options: MapOptions(
+                                  center: provider.latLng,
+                                  zoom: 14.0,
+                                  interactiveFlags: InteractiveFlag.none,
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate:
+                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    userAgentPackageName:
+                                        'com.eatezy_vendor.app',
+                                  ),
+                                  MarkerLayer(
+                                    markers: [
+                                      Marker(
+                                        point: provider.latLng!,
+                                        width: 44,
+                                        height: 44,
+                                        child: Icon(
+                                          Icons.location_on_rounded,
+                                          color: AppColor.primary,
+                                          size: 44,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.location_off_rounded,
+                                      size: 40,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    AppSpacing.h10,
+                                    Text(
+                                      'No location selected',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                      ),
+                    ),
+                    AppSpacing.h10,
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OSMMapPicker(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.edit_location_alt_rounded),
+                        label: const Text('Change Location'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColor.primary,
+                          side: const BorderSide(color: AppColor.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppSpacing.h20,
+
               PrimaryButton(
-                  title: 'Save',
-                  isLoading: provider.isLoading,
-                  onTap: () {
-                    provider.updateVendor(context);
-                  })
+                title: 'Save Changes',
+                isLoading: provider.isLoading,
+                onTap: () => provider.updateVendor(context),
+              ),
+              AppSpacing.h20,
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
+    required this.title,
+    required this.child,
+    this.subtitle,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F1F1F),
+            ),
+          ),
+          if (subtitle != null) ...[
+            AppSpacing.h5,
+            Text(
+              subtitle!,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+          AppSpacing.h15,
+          child,
+        ],
       ),
     );
   }

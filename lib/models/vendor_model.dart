@@ -15,6 +15,7 @@ class VendorModel {
   final String lat;
   final String long;
   final String banner;
+  final String packingFee;
 
   VendorModel(
       {required this.id,
@@ -32,7 +33,8 @@ class VendorModel {
       required this.estimateDistance,
       required this.lat,
       required this.long,
-      required this.banner});
+      required this.banner,
+      required this.packingFee});
 
   factory VendorModel.fromFirestore(
     Map<String, dynamic> data,
@@ -56,6 +58,7 @@ class VendorModel {
         estimateTime: estimateTime ?? data['estimateTime'] ?? '',
         lat: data['lat'] ?? '',
         long: data['long'] ?? '',
-        banner: data['banner'] ?? '');
+        banner: data['banner'] ?? '',
+        packingFee: data['packing_fee']?.toString() ?? '0');
   }
 }

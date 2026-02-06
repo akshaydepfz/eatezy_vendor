@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileService extends ChangeNotifier {
   TextEditingController nameController = TextEditingController();
+  TextEditingController packingFeeController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   final ImagePicker _picker2 = ImagePicker();
   VendorModel? vendor;
@@ -31,6 +32,7 @@ class ProfileService extends ChangeNotifier {
         vendor = VendorModel.fromFirestore(docSnapshot.data()!, docSnapshot.id);
         latLng = LatLng(double.parse(vendor!.lat), double.parse(vendor!.long));
         nameController.text = vendor!.shopName;
+        packingFeeController.text = vendor!.packingFee;
         notifyListeners();
       } else {}
     } catch (_) {}
@@ -44,13 +46,15 @@ class ProfileService extends ChangeNotifier {
     }
   }
 
-  Future<String> uploadImageToStorage(File imageFile) async {
+  Future<String> uploadImageToStorage(File imageFile,
+      {bool isBanner = false}) async {
     try {
       isLoading = true;
       notifyListeners();
-      Reference storageRef = FirebaseStorage.instance
-          .ref()
-          .child('product_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final path = isBanner
+          ? 'vendor_banners/${vendor?.id ?? "vendor"}_${DateTime.now().millisecondsSinceEpoch}.jpg'
+          : 'product_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      Reference storageRef = FirebaseStorage.instance.ref().child(path);
 
       UploadTask uploadTask = storageRef.putFile(imageFile);
       TaskSnapshot taskSnapshot = await uploadTask;
@@ -85,6 +89,7 @@ class ProfileService extends ChangeNotifier {
           FirebaseFirestore.instance.collection('vendors').doc(vendor!.id);
       Map<String, dynamic> dataToUpdate = {
         "shop_name": nameController.text,
+        "packing_fee": num.tryParse(packingFeeController.text.trim()) ?? 0,
       };
 
       if (image != null) {
@@ -93,14 +98,28 @@ class ProfileService extends ChangeNotifier {
       }
 
       if (image2 != null) {
-        String banner = await uploadImageToStorage(image2!);
-        dataToUpdate["banner"] = banner;
+        String bannerUrl = await uploadImageToStorage(image2!, isBanner: true);
+        dataToUpdate["banner"] = bannerUrl;
       }
 
       await docRef.update(dataToUpdate);
       await getVendor();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Color(0xFF084D00),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       print("Error updating vendor: $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e')),
+        );
+      }
     } finally {
       isLoading = false;
       notifyListeners();

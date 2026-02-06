@@ -4,6 +4,7 @@ import 'package:eatezy_vendor/view/auth/screens/login_screen.dart';
 import 'package:eatezy_vendor/view/chat/screens/chat_screen.dart';
 
 import 'package:eatezy_vendor/view/profile/screens/edit_profile_screen.dart';
+import 'package:eatezy_vendor/view/profile/screens/reviews_screen.dart';
 import 'package:eatezy_vendor/view/profile/service/profile_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -40,8 +41,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 200,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: NetworkImage(
-                              'https://images.unsplash.com/photo-1566438480900-0609be27a4be?q=80&w=3094&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'),
+                          image: provider.vendor!.banner.isNotEmpty
+                              ? NetworkImage(provider.vendor!.banner)
+                              : const NetworkImage(
+                                  'https://images.unsplash.com/photo-1566438480900-0609be27a4be?q=80&w=3094&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -79,6 +82,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   title: Text(
                     'Edit Profile',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                  trailing: Icon(Icons.arrow_forward_ios),
+                ),
+                ListTile(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ReviewsScreen()));
+                  },
+                  leading: Icon(
+                    Icons.star,
+                    color: AppColor.primary,
+                  ),
+                  title: Text(
+                    'Reviews',
                     style: TextStyle(fontSize: 17),
                   ),
                   trailing: Icon(Icons.arrow_forward_ios),

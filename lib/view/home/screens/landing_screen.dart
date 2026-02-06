@@ -90,6 +90,10 @@ class _LandingScreenState extends State<LandingScreen> {
             label: 'Menu',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.local_offer),
+            label: 'Offers',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
           ),

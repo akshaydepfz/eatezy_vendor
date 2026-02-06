@@ -160,14 +160,30 @@ class _ProductEditScreenState extends State<ProductEditScreen> {
                       return const Center(child: Text('No items found.'));
                     } else {
                       final items = snapshot.data!;
+                      // Deduplicate by name so each value appears exactly once
+                      final seen = <String>{};
+                      final uniqueItems = items
+                          .where((item) => seen.add(item.name))
+                          .toList();
+                      // If product's category is not in the list (e.g. category removed), add it so value is valid
+                      if (provider.selectedItem != null &&
+                          provider.selectedItem!.isNotEmpty &&
+                          !uniqueItems.any((item) => item.name == provider.selectedItem)) {
+                        uniqueItems.insert(0, CategoryModel(id: '', name: provider.selectedItem!, image: '', order: '', mainCategory: ''));
+                      }
+                      final validValue = provider.selectedItem != null &&
+                              uniqueItems
+                                  .any((item) => item.name == provider.selectedItem)
+                          ? provider.selectedItem
+                          : null;
 
                       return DropdownButtonFormField<String>(
                         decoration: const InputDecoration(
                           labelText: 'Select Item category',
                           border: OutlineInputBorder(),
                         ),
-                        value: provider.selectedItem,
-                        items: items.map((item) {
+                        value: validValue,
+                        items: uniqueItems.map((item) {
                           return DropdownMenuItem<String>(
                             value: item.name,
                             child: Text(item.name),
@@ -189,6 +205,10 @@ class _ProductEditScreenState extends State<ProductEditScreen> {
                 PrimaryTextField(
                     title: 'Enter Item MRP Price',
                     controller: provider.mrpController),
+                AppSpacing.h20,
+                PrimaryTextField(
+                    title: 'Preparation time (e.g. 15 mins)',
+                    controller: provider.preparationTimeController),
                 AppSpacing.h20,
                 SizedBox(
                   height: 55,

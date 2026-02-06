@@ -11,6 +11,7 @@ class CartModel {
   String deliveryBoyId;
   bool isDelivered;
   bool isCancelled;
+  String cancellationReason;
   String deliveryType;
   bool isRated;
   double rating;
@@ -29,6 +30,9 @@ class CartModel {
   String chatId;
   String discount;
   String totalPrice;
+  String notes;
+  double packingFee;
+  double platformCharge;
   List<OrderedProduct> products;
 
   CartModel(
@@ -44,6 +48,7 @@ class CartModel {
       required this.deliveryBoyId,
       required this.isDelivered,
       required this.isCancelled,
+      this.cancellationReason = '',
       required this.deliveryType,
       required this.isRated,
       required this.rating,
@@ -62,7 +67,10 @@ class CartModel {
       required this.chatId,
       required this.products,
       required this.discount,
-      required this.totalPrice});
+      required this.totalPrice,
+      this.notes = '',
+      this.packingFee = 0.0,
+      this.platformCharge = 0.0});
 
   factory CartModel.fromFirestore(Map<String, dynamic> data, String id) {
     return CartModel(
@@ -78,6 +86,7 @@ class CartModel {
         deliveryBoyId: data['deliveryBoyId'] ?? '',
         isDelivered: data['isDelivered'] ?? false,
         isCancelled: data['isCancelled'] ?? false,
+        cancellationReason: data['cancellation_reason'] ?? '',
         deliveryType: data['delivery_type'] ?? '',
         isRated: data['is_rated'] ?? false,
         rating: data['star']?.toDouble() ?? 0.0,
@@ -98,7 +107,10 @@ class CartModel {
             .map((e) => OrderedProduct.fromMap(e))
             .toList(),
         discount: data['discount'] ?? '',
-        totalPrice: data['total'] ?? "0");
+        totalPrice: data['total'] ?? '',
+        notes: data['notes'] ?? '',
+        packingFee: (data['packing_fee'] as num?)?.toDouble() ?? 0.0,
+        platformCharge: (data['platform_charge'] as num?)?.toDouble() ?? 0.0);
   }
 
   Map<String, dynamic> toMap() {
@@ -114,6 +126,7 @@ class CartModel {
       'deliveryBoyId': deliveryBoyId,
       'isDelivered': isDelivered,
       'isCancelled': isCancelled,
+      'cancellation_reason': cancellationReason,
       'delivery_type': deliveryType,
       'is_rated': isRated,
       'star': rating,
@@ -131,7 +144,11 @@ class CartModel {
       'vendor_phone': vendorPhone,
       'chat_id': chatId,
       'products': products.map((e) => e.toMap()).toList(),
-      'discount': discount
+      'discount': discount,
+      'total': totalPrice,
+      'notes': notes,
+      'packing_fee': packingFee,
+      'platform_charge': platformCharge,
     };
   }
 }

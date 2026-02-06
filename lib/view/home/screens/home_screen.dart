@@ -2,11 +2,10 @@ import 'package:eatezy_vendor/utils/app_color.dart';
 import 'package:eatezy_vendor/utils/app_spacing.dart';
 import 'package:eatezy_vendor/utils/app_style.dart';
 import 'package:eatezy_vendor/view/home/services/home_provider.dart';
-import 'package:eatezy_vendor/view/orders/screens/order_view_screen.dart';
 import 'package:eatezy_vendor/view/orders/services/order_service.dart';
+import 'package:eatezy_vendor/view/orders/widgets/order_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -110,18 +109,79 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       AppSpacing.h10,
+                      Text(
+                        'Shop status',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      AppSpacing.h10,
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Active Status',
-                            style: TextStyle(fontSize: 16),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => provider.onStatusChanged(true),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: provider.vendor!.isActive
+                                      ? AppColor.primary
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: provider.vendor!.isActive
+                                        ? AppColor.primary
+                                        : Colors.grey.shade400,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Open',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: provider.vendor!.isActive
+                                          ? Colors.white
+                                          : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                          Switch(
-                              value: provider.vendor!.isActive,
-                              onChanged: (v) {
-                                provider.onStatusChanged(v);
-                              })
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => provider.onStatusChanged(false),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: !provider.vendor!.isActive
+                                      ? AppColor.primary
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: !provider.vendor!.isActive
+                                        ? AppColor.primary
+                                        : Colors.grey.shade400,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Close',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: !provider.vendor!.isActive
+                                          ? Colors.white
+                                          : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       AppSpacing.h10,
@@ -135,127 +195,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             'New Orders',
                             style: TextStyle(fontSize: 16),
                           ),
-                          TextButton(onPressed: () {}, child: Text('See All'))
+                          TextButton(
+                              onPressed: () {
+                                provider.onItemTapped(1);
+                              },
+                              child: Text('See All'))
                         ],
                       ),
                       Consumer<OrderService>(builder: (context, p, _) {
                         return ListView.builder(
-                          physics: NeverScrollableScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           itemCount: p.pendingOrders.length,
                           shrinkWrap: true,
                           itemBuilder: (context, index) {
-                            return Container(
-                              margin: EdgeInsets.only(bottom: 15),
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  border:
-                                      Border.all(color: Colors.grey.shade300)),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  AppSpacing.h10,
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(DateFormat('MMM d yyyy').format(
-                                          DateTime.parse(p.pendingOrders[index]
-                                              .createdDate))),
-                                      Container(
-                                        width: 75,
-                                        height: 30,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          color: p.pendingOrders[index].isPaid
-                                              ? const Color(0xFFD1EEDB)
-                                              : Colors.red.withOpacity(0.2),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            'Unpaid',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color:
-                                                  p.pendingOrders[index].isPaid
-                                                      ? Colors.green
-                                                      : Colors.red,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                  ListView.builder(
-                                      physics: NeverScrollableScrollPhysics(),
-                                      shrinkWrap: true,
-                                      itemCount: p
-                                          .pendingOrders[index].products.length,
-                                      itemBuilder: (context, i) {
-                                        return ListTile(
-                                          contentPadding:
-                                              EdgeInsets.symmetric(vertical: 3),
-                                          leading: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            child: SizedBox(
-                                              height: 50,
-                                              width: 50,
-                                              child: Image.network(
-                                                p.pendingOrders[index]
-                                                    .products[i].image,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                          title: Text(
-                                            p.pendingOrders[index].products[i]
-                                                .name,
-                                            style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          subtitle: Text(
-                                            "X ${p.pendingOrders[index].products[i].quantity}"
-                                                .toString(),
-                                            style: TextStyle(fontSize: 14),
-                                          ),
-                                          trailing: Text(
-                                            "₹${p.pendingOrders[index].products[i].price * p.pendingOrders[index].products[i].quantity}",
-                                            style: TextStyle(fontSize: 16),
-                                          ),
-                                        );
-                                      }),
-                                  AppSpacing.h20,
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  OrderDetailsScreen(
-                                                      order: p.pendingOrders[
-                                                          index])));
-                                    },
-                                    child: Container(
-                                      width: MediaQuery.of(context).size.width,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          color: AppColor.primary),
-                                      padding: EdgeInsets.all(15),
-                                      child: Center(
-                                          child: Text(
-                                        'View Details',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold),
-                                      )),
-                                    ),
-                                  )
-                                ],
-                              ),
+                            return OrderCard(
+                              order: p.pendingOrders[index],
+                              isCancelled: false,
                             );
                           },
                         );

@@ -94,10 +94,10 @@ class ChatScreen extends StatelessWidget {
                                 );
                               },
                               child: ChatTile(
-                                image: chat['customer_image'],
+                                image: chat['customer_image']?.toString(),
                                 width: width,
                                 height: height,
-                                name: chat['customer_name'],
+                                name: chat['customer_name'] ?? '',
                                 message: lastMessage,
                                 time: timeString,
                                 unreadCount: unreadCount,
@@ -131,7 +131,7 @@ class ChatTile extends StatelessWidget {
       required this.message,
       required this.time,
       required this.unreadCount,
-      required this.image})
+      this.image})
       : super(key: key);
 
   final double width;
@@ -139,8 +139,16 @@ class ChatTile extends StatelessWidget {
   final String name;
   final String message;
   final String time;
-  final String image;
+  final String? image;
   final int unreadCount;
+
+  static bool _isValidNetworkImageUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return false;
+    final uri = Uri.tryParse(url);
+    return uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +170,17 @@ class ChatTile extends StatelessWidget {
                 height: 50,
                 width: 50,
                 child: CircleAvatar(
-                  backgroundImage: NetworkImage(image),
+                  backgroundImage: _isValidNetworkImageUrl(image)
+                      ? NetworkImage(image!)
+                      : null,
+                  child: _isValidNetworkImageUrl(image)
+                      ? null
+                      : Text(
+                          name.isNotEmpty
+                              ? name.substring(0, 1).toUpperCase()
+                              : '?',
+                          style: const TextStyle(fontSize: 20),
+                        ),
                 ),
               ),
               const SizedBox(width: 10),

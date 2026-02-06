@@ -10,6 +10,7 @@ class ProductModel {
   double price;
   String slashedPrice;
   String unitPerItem;
+  String preparationTime;
 
   ProductModel({
     required this.id,
@@ -23,6 +24,7 @@ class ProductModel {
     required this.price,
     required this.slashedPrice,
     required this.unitPerItem,
+    this.preparationTime = '',
   });
 
   // Create a factory method to map Firestore data to ProductModel
@@ -42,6 +44,7 @@ class ProductModel {
             ? double.parse(data['price'].toString())
             : 0.0,
         slashedPrice: data['slashedPrice'],
-        unitPerItem: data['unitPerItem'] ?? "");
+        unitPerItem: data['unitPerItem'] ?? "",
+        preparationTime: data['preparationTime']?.toString() ?? '');
   }
 }
