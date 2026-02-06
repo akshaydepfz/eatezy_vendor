@@ -4,6 +4,7 @@ import 'package:eatezy_vendor/view/auth/screens/login_screen.dart';
 import 'package:eatezy_vendor/view/chat/screens/chat_screen.dart';
 
 import 'package:eatezy_vendor/view/profile/screens/edit_profile_screen.dart';
+import 'package:eatezy_vendor/view/profile/screens/my_earnings_screen.dart';
 import 'package:eatezy_vendor/view/profile/screens/reviews_screen.dart';
 import 'package:eatezy_vendor/view/profile/service/profile_service.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +100,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   title: Text(
                     'Reviews',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                  trailing: Icon(Icons.arrow_forward_ios),
+                ),
+                ListTile(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const MyEarningsScreen()));
+                  },
+                  leading: Icon(
+                    Icons.currency_rupee,
+                    color: AppColor.primary,
+                  ),
+                  title: Text(
+                    'Earnings',
                     style: TextStyle(fontSize: 17),
                   ),
                   trailing: Icon(Icons.arrow_forward_ios),

@@ -115,6 +115,57 @@ class OrderService extends ChangeNotifier {
     }
   }
 
+  /// Parses cart date (created_date) for filtering. Returns null if unparseable.
+  static DateTime? _parseCartDate(String createdDate) {
+    if (createdDate.isEmpty) return null;
+    return DateTime.tryParse(createdDate);
+  }
+
+  /// Returns delivered orders whose created date falls within [start] and [end] (inclusive of day).
+  List<CartModel> getDeliveredInDateRange(DateTime start, DateTime end) {
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day).add(const Duration(days: 1));
+    return delivered.where((cart) {
+      final d = _parseCartDate(cart.createdDate);
+      if (d == null) return false;
+      final day = DateTime(d.year, d.month, d.day);
+      return !day.isBefore(startDay) && day.isBefore(endDay);
+    }).toList();
+  }
+
+  /// Earning for a single order (vendor share after platform charge).
+  double getOrderEarning(CartModel cart) {
+    final storedTotal = double.tryParse(cart.totalPrice);
+    double orderTotal;
+    if (storedTotal != null && storedTotal > 0) {
+      orderTotal = storedTotal - cart.platformCharge;
+    } else {
+      orderTotal = 0.0;
+      for (var product in cart.products) {
+        orderTotal += product.price * product.quantity;
+      }
+      if (cart.discount.isNotEmpty && cart.discount != 'null') {
+        try {
+          double discountPercent = double.parse(cart.discount);
+          orderTotal -= orderTotal * (discountPercent / 100);
+        } catch (_) {}
+        }
+      orderTotal += cart.packingFee;
+      orderTotal -= cart.platformCharge;
+    }
+    return orderTotal >= 0 ? orderTotal : 0;
+  }
+
+  /// Total earnings from delivered orders in the given date range.
+  double calculateEarningsInRange(DateTime start, DateTime end) {
+    final list = getDeliveredInDateRange(start, end);
+    double totalEarnings = 0.0;
+    for (var cart in list) {
+      totalEarnings += getOrderEarning(cart);
+    }
+    return totalEarnings;
+  }
+
   double calculateTotalEarnings() {
     double totalEarnings = 0.0;
 
