@@ -138,18 +138,21 @@ class OrderService extends ChangeNotifier {
     final storedTotal = double.tryParse(cart.totalPrice);
     double orderTotal;
     if (storedTotal != null && storedTotal > 0) {
+      // totalPrice is already: subtotal×(1−discount/100) + delivery + packing + platform
       orderTotal = storedTotal - cart.platformCharge;
     } else {
+      // Fallback: subtotal → apply coupon % → + delivery → + packing → - platform
       orderTotal = 0.0;
       for (var product in cart.products) {
         orderTotal += product.price * product.quantity;
       }
       if (cart.discount.isNotEmpty && cart.discount != 'null') {
         try {
-          double discountPercent = double.parse(cart.discount);
+          final discountPercent = double.parse(cart.discount);
           orderTotal -= orderTotal * (discountPercent / 100);
         } catch (_) {}
-        }
+      }
+      orderTotal += cart.deliveryCharge;
       orderTotal += cart.packingFee;
       orderTotal -= cart.platformCharge;
     }
@@ -182,10 +185,11 @@ class OrderService extends ChangeNotifier {
         }
         if (cart.discount.isNotEmpty && cart.discount != 'null') {
           try {
-            double discountPercent = double.parse(cart.discount);
+            final discountPercent = double.parse(cart.discount);
             orderTotal -= orderTotal * (discountPercent / 100);
           } catch (_) {}
         }
+        orderTotal += cart.deliveryCharge;
         orderTotal += cart.packingFee;
         orderTotal -= cart.platformCharge;
       }
@@ -278,11 +282,16 @@ class OrderService extends ChangeNotifier {
   }
 
   Future<void> completeOrder(
-      BuildContext context, String id, String userId) async {
-    await FirebaseFirestore.instance
-        .collection('cart')
-        .doc(id)
-        .update({"order_status": "Completed"});
+    BuildContext context,
+    String id,
+    String userId, {
+    bool markAsPaid = false,
+  }) async {
+    final updates = <String, dynamic>{"order_status": "Completed"};
+    if (markAsPaid) {
+      updates['isPaid'] = true;
+    }
+    await FirebaseFirestore.instance.collection('cart').doc(id).update(updates);
     sendFCMMessage(findCustomerById(userId)!.token, 'Your Order is Completeds');
     await fetchOrders();
     if (context.mounted) Navigator.pop(context);

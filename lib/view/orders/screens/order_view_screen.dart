@@ -11,14 +11,16 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/order_service.dart';
 
+bool _isCod(CartModel order) {
+  return order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
+}
+
+/// COD: show full order total (totalPrice, includes platform fee). Online: show vendor amount (totalPrice - platformCharge).
 String _getDisplayTotal(CartModel order) {
   try {
-    double total = double.tryParse(order.totalPrice) ?? 0.0;
-    if (order.discount != 'null' && order.discount.isNotEmpty) {
-      final discountPct = double.tryParse(order.discount) ?? 0.0;
-      total = total - (discountPct / 100) * total;
-    }
-    final displayAmount = total - order.platformCharge;
+    final total = double.tryParse(order.totalPrice) ?? 0.0;
+    final isCod = order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
+    final displayAmount = isCod ? total : total - order.platformCharge;
     return displayAmount >= 0
         ? "₹${displayAmount.toStringAsFixed(0)}"
         : "₹${order.totalPrice}";
@@ -96,6 +98,76 @@ class OrderDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Yes, proceed'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCodCompleteDialog(
+    BuildContext context,
+    String amount,
+    VoidCallback onConfirm,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColor.primary.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.info_outline_rounded,
+                  color: AppColor.primary, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Complete Order (COD)',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey.shade900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Did you collect the amount of $amount?',
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.grey.shade700,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'No',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              onConfirm();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColor.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Yes'),
           ),
         ],
       ),
@@ -822,6 +894,7 @@ class OrderDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildContactCard(BuildContext context, CartModel orderData) {
+    if (orderData.orderStatus == 'Completed') return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -977,6 +1050,9 @@ class OrderDetailsScreen extends StatelessWidget {
           if (orderData.packingFee > 0)
             _buildSummaryRow('Packing charge',
                 '₹${orderData.packingFee.toStringAsFixed(0)}'),
+          if (_isCod(orderData) && orderData.platformCharge > 0)
+            _buildSummaryRow('Platform fee',
+                '₹${orderData.platformCharge.toStringAsFixed(0)}'),
           if (orderData.discount != 'null' && orderData.discount.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -1218,13 +1294,29 @@ class OrderDetailsScreen extends StatelessWidget {
             title: 'Complete Order',
             isLoading: false,
             onTap: () {
-              _showConfirmDialog(
-                context,
-                'Complete Order',
-                'Are you sure you want to mark this order as completed?',
-                () => provider.completeOrder(
-                    context, orderData.id, orderData.uuid),
-              );
+              if (_isCod(orderData)) {
+                _showCodCompleteDialog(
+                  context,
+                  _getDisplayTotal(orderData),
+                  () => provider.completeOrder(
+                    context,
+                    orderData.id,
+                    orderData.uuid,
+                    markAsPaid: true,
+                  ),
+                );
+              } else {
+                _showConfirmDialog(
+                  context,
+                  'Complete Order',
+                  'Are you sure you want to mark this order as completed?',
+                  () => provider.completeOrder(
+                    context,
+                    orderData.id,
+                    orderData.uuid,
+                  ),
+                );
+              }
             },
           ),
         ),

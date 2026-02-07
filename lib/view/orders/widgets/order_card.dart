@@ -15,10 +15,12 @@ class OrderCard extends StatelessWidget {
   final CartModel order;
   final bool isCancelled;
 
+  /// COD: full order total (totalPrice, includes platform fee). Online: vendor amount (totalPrice - platformCharge).
   static String getDisplayTotal(CartModel order) {
     try {
       final total = double.tryParse(order.totalPrice) ?? 0.0;
-      final displayAmount = total - order.platformCharge;
+      final isCod = order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
+      final displayAmount = isCod ? total : total - order.platformCharge;
       return displayAmount >= 0 ? displayAmount.toStringAsFixed(0) : order.totalPrice;
     } catch (_) {
       return order.totalPrice;
@@ -33,6 +35,8 @@ class OrderCard extends StatelessWidget {
     final displayTotal = getDisplayTotal(order);
     final hasPackingCharge = order.packingFee > 0;
     final hasDeliveryCharge = order.deliveryCharge > 0;
+    final isCod = order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
+    final showPlatformFee = isCod && order.platformCharge > 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -309,7 +313,7 @@ class OrderCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       // Charges breakdown
-                      if (hasPackingCharge || hasDeliveryCharge) ...[
+                      if (hasPackingCharge || hasDeliveryCharge || showPlatformFee) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
@@ -320,9 +324,12 @@ class OrderCard extends StatelessWidget {
                             children: [
                               if (hasDeliveryCharge)
                                 _buildChargeRow('Delivery charge', '₹${order.deliveryCharge}'),
-                              if (hasDeliveryCharge && hasPackingCharge) const SizedBox(height: 8),
+                              if (hasDeliveryCharge && (hasPackingCharge || showPlatformFee)) const SizedBox(height: 8),
                               if (hasPackingCharge)
                                 _buildChargeRow('Packing charge', '₹${order.packingFee.toStringAsFixed(0)}'),
+                              if (hasPackingCharge && showPlatformFee) const SizedBox(height: 8),
+                              if (showPlatformFee)
+                                _buildChargeRow('Platform fee', '₹${order.platformCharge.toStringAsFixed(0)}'),
                             ],
                           ),
                         ),

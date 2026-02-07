@@ -1,4 +1,3 @@
-import 'package:eatezy_vendor/main.dart';
 import 'package:eatezy_vendor/utils/app_color.dart';
 import 'package:eatezy_vendor/view/home/services/home_provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -16,6 +15,7 @@ class LandingScreen extends StatefulWidget {
 class _LandingScreenState extends State<LandingScreen> {
   @override
   void initState() {
+    Provider.of<HomeProvider>(context, listen: false).startVendorStream();
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
@@ -67,6 +67,53 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<HomeProvider>(context);
+
+    if (provider.vendor == null) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (provider.vendor!.isSuspend) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.block,
+                    size: 80,
+                    color: AppColor.primary,
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    'Your account has been suspended',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Contact support@eatezy.in to resolve this issue.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: provider.screens[provider.selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
