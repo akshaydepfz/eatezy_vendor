@@ -15,13 +15,26 @@ class OrderCard extends StatelessWidget {
   final CartModel order;
   final bool isCancelled;
 
-  /// COD: full order total (totalPrice, includes platform fee). Online: vendor amount (totalPrice - platformCharge).
+  /// Full order total: subtotal + delivery + packing + platform + transaction fee (with decimals).
   static String getDisplayTotal(CartModel order) {
     try {
-      final total = double.tryParse(order.totalPrice) ?? 0.0;
-      final isCod = order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
-      final displayAmount = isCod ? total : total - order.platformCharge;
-      return displayAmount >= 0 ? displayAmount.toStringAsFixed(0) : order.totalPrice;
+      final subtotal = order.products.fold<double>(
+        0, (sum, p) => sum + (p.price * p.quantity),
+      );
+      double grandTotal = subtotal +
+          order.deliveryCharge +
+          order.packingFee +
+          order.platformCharge +
+          order.transactionFee;
+      final discountPct = double.tryParse(order.discount) ?? 0.0;
+      if (discountPct > 0) {
+        grandTotal = subtotal * (1 - discountPct / 100) +
+            order.deliveryCharge +
+            order.packingFee +
+            order.platformCharge +
+            order.transactionFee;
+      }
+      return grandTotal >= 0 ? grandTotal.toStringAsFixed(2) : order.totalPrice;
     } catch (_) {
       return order.totalPrice;
     }
@@ -35,6 +48,7 @@ class OrderCard extends StatelessWidget {
     final displayTotal = getDisplayTotal(order);
     final hasPackingCharge = order.packingFee > 0;
     final hasDeliveryCharge = order.deliveryCharge > 0;
+    final hasTransactionFee = order.transactionFee > 0;
     final isCod = order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
     final showPlatformFee = isCod && order.platformCharge > 0;
 
@@ -98,11 +112,12 @@ class OrderCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header: order ID, status, date
+                      // Header: order ID, scheduled badge, status, date
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 7),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -122,6 +137,39 @@ class OrderCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (order.isScheduled) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple.shade50,
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(
+                                  color: Colors.deepPurple.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.schedule_rounded,
+                                    size: 14,
+                                    color: Colors.deepPurple.shade600,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Scheduled',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.deepPurple.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const Spacer(),
                           _buildStatusChip(context),
                           const SizedBox(width: 12),
@@ -282,7 +330,7 @@ class OrderCard extends StatelessWidget {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                           Text(
-                                            '× ${product.quantity} • ₹${(product.price * product.quantity).toStringAsFixed(0)}',
+                                            '× ${product.quantity} • ₹${(product.price * product.quantity).toStringAsFixed(2)}',
                                             style: TextStyle(
                                               fontSize: 13,
                                               color: Colors.grey.shade600,
@@ -313,7 +361,7 @@ class OrderCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       // Charges breakdown
-                      if (hasPackingCharge || hasDeliveryCharge || showPlatformFee) ...[
+                      if (hasPackingCharge || hasDeliveryCharge || showPlatformFee || hasTransactionFee) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
@@ -323,13 +371,16 @@ class OrderCard extends StatelessWidget {
                           child: Column(
                             children: [
                               if (hasDeliveryCharge)
-                                _buildChargeRow('Delivery charge', '₹${order.deliveryCharge}'),
-                              if (hasDeliveryCharge && (hasPackingCharge || showPlatformFee)) const SizedBox(height: 8),
+                                _buildChargeRow('Delivery charge', '₹${order.deliveryCharge.toStringAsFixed(2)}'),
+                              if (hasDeliveryCharge && (hasPackingCharge || showPlatformFee || hasTransactionFee)) const SizedBox(height: 8),
                               if (hasPackingCharge)
-                                _buildChargeRow('Packing charge', '₹${order.packingFee.toStringAsFixed(0)}'),
-                              if (hasPackingCharge && showPlatformFee) const SizedBox(height: 8),
+                                _buildChargeRow('Packing charge', '₹${order.packingFee.toStringAsFixed(2)}'),
+                              if (hasPackingCharge && (showPlatformFee || hasTransactionFee)) const SizedBox(height: 8),
                               if (showPlatformFee)
-                                _buildChargeRow('Platform fee', '₹${order.platformCharge.toStringAsFixed(0)}'),
+                                _buildChargeRow('Platform fee', '₹${order.platformCharge.toStringAsFixed(2)}'),
+                              if (showPlatformFee && hasTransactionFee) const SizedBox(height: 8),
+                              if (hasTransactionFee)
+                                _buildChargeRow('Transaction fee', '₹${order.transactionFee.toStringAsFixed(2)}'),
                             ],
                           ),
                         ),

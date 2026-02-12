@@ -12,7 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeProvider extends ChangeNotifier {
   int selectedIndex = 0;
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _vendorSubscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _vendorSubscription;
 
   final List<Widget> screens = [
     HomeScreen(),
@@ -28,9 +29,6 @@ class HomeProvider extends ChangeNotifier {
     selectedIndex = index;
     notifyListeners();
   }
-
-
-
 
   Future<void> updateAdminFcmToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -57,14 +55,32 @@ class HomeProvider extends ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('token') ?? "";
     vendor!.isActive = v;
-    await FirebaseFirestore.instance
-        .collection('vendors')
-        .doc(token)
-        .update({
+    await FirebaseFirestore.instance.collection('vendors').doc(token).update({
       "is_active": v,
       "isActive": v,
     });
     notifyListeners();
+  }
+
+  Future<String?> getFcmToken() async {
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      // iOS permission
+      await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      String? token = await messaging.getToken();
+
+      print("FCM Token: $token");
+      return token;
+    } catch (e) {
+      print("FCM Token Error: $e");
+      return null;
+    }
   }
 
   Future<void> fetchVendor() async {

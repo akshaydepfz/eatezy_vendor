@@ -15,14 +15,39 @@ bool _isCod(CartModel order) {
   return order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
 }
 
-/// COD: show full order total (totalPrice, includes platform fee). Online: show vendor amount (totalPrice - platformCharge).
+String? _formatScheduledDateTime(String value) {
+  if (value.trim().isEmpty) return null;
+  try {
+    final dt = DateTime.parse(value.trim());
+    return DateFormat('MMM d, yyyy • h:mm a').format(dt);
+  } catch (_) {
+    // If parsing fails, fall back to raw value
+    return value;
+  }
+}
+
+/// Full order total: subtotal + delivery + packing + platform + transaction fee (with decimals).
 String _getDisplayTotal(CartModel order) {
   try {
-    final total = double.tryParse(order.totalPrice) ?? 0.0;
-    final isCod = order.deliveryType.toLowerCase() == 'cod' || !order.isPaid;
-    final displayAmount = isCod ? total : total - order.platformCharge;
-    return displayAmount >= 0
-        ? "₹${displayAmount.toStringAsFixed(0)}"
+    final subtotal = order.products.fold<double>(
+      0,
+      (sum, p) => sum + (p.price * p.quantity),
+    );
+    double grandTotal = subtotal +
+        order.deliveryCharge +
+        order.packingFee +
+        order.platformCharge +
+        order.transactionFee;
+    final discountPct = double.tryParse(order.discount) ?? 0.0;
+    if (discountPct > 0) {
+      grandTotal = subtotal * (1 - discountPct / 100) +
+          order.deliveryCharge +
+          order.packingFee +
+          order.platformCharge +
+          order.transactionFee;
+    }
+    return grandTotal >= 0
+        ? "₹${grandTotal.toStringAsFixed(2)}"
         : "₹${order.totalPrice}";
   } catch (_) {
     return "₹${order.totalPrice}";
@@ -486,6 +511,39 @@ class OrderDetailsScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              if (orderData.isScheduled) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.shade50,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: Colors.deepPurple.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 14,
+                        color: Colors.deepPurple.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Scheduled',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.deepPurple.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const Spacer(),
               _buildStatusChip(orderData),
             ],
@@ -767,7 +825,7 @@ class OrderDetailsScreen extends StatelessWidget {
                           ),
                         const SizedBox(height: 6),
                         Text(
-                          '× ${product.quantity} • ₹${product.price.toStringAsFixed(0)}/${product.unit}',
+                          '× ${product.quantity} • ₹${product.price.toStringAsFixed(2)}/${product.unit}',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey.shade600,
@@ -776,7 +834,7 @@ class OrderDetailsScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '₹${(product.price * product.quantity).toStringAsFixed(0)}',
+                          '₹${(product.price * product.quantity).toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
@@ -963,7 +1021,10 @@ class OrderDetailsScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ChatViewScreen(chatId: doc),
+          builder: (_) => ChatViewScreen(
+            chatId: doc,
+            customerId: orderData.uuid,
+          ),
         ),
       );
     }
@@ -1044,15 +1105,65 @@ class OrderDetailsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          _buildSummaryRow('Subtotal', '₹${subtotal.toStringAsFixed(0)}'),
+          _buildSummaryRow('Subtotal', '₹${subtotal.toStringAsFixed(2)}'),
           if (orderData.deliveryCharge > 0)
-            _buildSummaryRow('Delivery charge', '₹${orderData.deliveryCharge}'),
+            _buildSummaryRow('Delivery charge',
+                '₹${orderData.deliveryCharge.toStringAsFixed(2)}'),
           if (orderData.packingFee > 0)
             _buildSummaryRow('Packing charge',
-                '₹${orderData.packingFee.toStringAsFixed(0)}'),
-          if (_isCod(orderData) && orderData.platformCharge > 0)
+                '₹${orderData.packingFee.toStringAsFixed(2)}'),
+          if (orderData.platformCharge > 0)
             _buildSummaryRow('Platform fee',
-                '₹${orderData.platformCharge.toStringAsFixed(0)}'),
+                '₹${orderData.platformCharge.toStringAsFixed(2)}'),
+          if (orderData.transactionFee > 0)
+            _buildSummaryRow('Transaction fee',
+                '₹${orderData.transactionFee.toStringAsFixed(2)}'),
+          if (orderData.isScheduled) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.shade50,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Colors.deepPurple.shade200,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 16,
+                        color: Colors.deepPurple.shade600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Scheduled order',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.deepPurple.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_formatScheduledDateTime(orderData.scheduledFor) != null)
+                    Text(
+                      _formatScheduledDateTime(orderData.scheduledFor)!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.deepPurple.shade700,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
           if (orderData.discount != 'null' && orderData.discount.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -1211,7 +1322,8 @@ class OrderDetailsScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(ctx).pop();
-                      provider.cancellOrder(context, orderData.id);
+                      provider.cancellOrder(
+                          context, orderData.id, orderData.uuid);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,

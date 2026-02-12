@@ -61,6 +61,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       AppSpacing.h10,
                       GestureDetector(
                         onTap: () {
+                          final token = provider.getFcmToken();
+                          if (token != null) {
+                            print("FCM Token: $token");
+                          } else {
+                            print("FCM Token is null");
+                          }
                           Navigator.push(
                             context,
                             MaterialPageRoute(

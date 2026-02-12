@@ -48,7 +48,8 @@ class _MyEarningsScreenState extends State<MyEarningsScreen> {
     );
     if (picked != null && mounted) {
       setState(() {
-        _startDate = DateTime(picked.start.year, picked.start.month, picked.start.day);
+        _startDate =
+            DateTime(picked.start.year, picked.start.month, picked.start.day);
         _endDate = DateTime(picked.end.year, picked.end.month, picked.end.day);
       });
     }
@@ -64,7 +65,8 @@ class _MyEarningsScreenState extends State<MyEarningsScreen> {
       ),
       body: Consumer<OrderService>(
         builder: (context, orderService, _) {
-          final ordersInRange = orderService.getDeliveredInDateRange(_startDate, _endDate);
+          final ordersInRange =
+              orderService.getDeliveredInDateRange(_startDate, _endDate);
           ordersInRange.sort((a, b) {
             final da = DateTime.tryParse(a.createdDate);
             final db = DateTime.tryParse(b.createdDate);
@@ -74,7 +76,8 @@ class _MyEarningsScreenState extends State<MyEarningsScreen> {
             return db.compareTo(da);
           });
           final totalOrders = ordersInRange.length;
-          final totalEarnings = orderService.calculateEarningsInRange(_startDate, _endDate);
+          final totalEarnings =
+              orderService.calculateEarningsInRange(_startDate, _endDate);
           final dateFormat = DateFormat('MMM d, yyyy');
 
           return SingleChildScrollView(
@@ -86,18 +89,21 @@ class _MyEarningsScreenState extends State<MyEarningsScreen> {
                   onTap: _pickDateRange,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14, horizontal: 16),
                     decoration: BoxDecoration(
                       color: AppColor.primary.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColor.primary.withOpacity(0.3)),
+                      border:
+                          Border.all(color: AppColor.primary.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.calendar_month, color: AppColor.primary, size: 22),
+                            Icon(Icons.calendar_month,
+                                color: AppColor.primary, size: 22),
                             AppSpacing.w10,
                             Text(
                               '${dateFormat.format(_startDate)} – ${dateFormat.format(_endDate)}',
@@ -109,7 +115,8 @@ class _MyEarningsScreenState extends State<MyEarningsScreen> {
                             ),
                           ],
                         ),
-                        Icon(Icons.edit_calendar, color: AppColor.primary, size: 20),
+                        Icon(Icons.edit_calendar,
+                            color: AppColor.primary, size: 20),
                       ],
                     ),
                   ),
@@ -173,7 +180,7 @@ class _MyEarningsScreenState extends State<MyEarningsScreen> {
                 ),
                 AppSpacing.h20,
                 Text(
-                  'Earnings are based on completed (delivered) orders in the selected date range.',
+                  'Earnings are based on completed orders in the selected date range.',
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
                 AppSpacing.h20,
@@ -183,7 +190,8 @@ class _MyEarningsScreenState extends State<MyEarningsScreen> {
                     child: Center(
                       child: Text(
                         'No orders in this date range',
-                        style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                        style: TextStyle(
+                            fontSize: 15, color: Colors.grey.shade600),
                       ),
                     ),
                   )
@@ -261,7 +269,8 @@ class _OrderEarningTile extends StatelessWidget {
                   if (order.id.isNotEmpty)
                     Text(
                       'Order #${order.id.substring(0, order.id.length > 8 ? 8 : order.id.length)}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                 ],
               ),

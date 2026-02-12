@@ -1,6 +1,9 @@
 double _parsePackingFee(Map<String, dynamic> data) {
   // Backend may use packing_fee, package_fee, or packing_charge
-  final value = data['packing_fee'] ?? data['package_fee'] ?? data['packing_charge'] ?? data['package_charge'];
+  final value = data['packing_fee'] ??
+      data['package_fee'] ??
+      data['packing_charge'] ??
+      data['package_charge'];
   if (value == null) return 0.0;
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value) ?? 0.0;
@@ -15,7 +18,9 @@ class CartModel {
   String customerName;
   String phone;
   String address;
+  String scheduledFor;
   bool isPaid;
+  bool isScheduled;
   String orderStatus;
   String deliveryBoyId;
   bool isDelivered;
@@ -42,6 +47,7 @@ class CartModel {
   String totalPrice;
   String notes;
   double packingFee;
+  double transactionFee;
 
   /// Estimated preparation time in minutes (set when vendor confirms order).
   int preparationTimeMinutes;
@@ -56,7 +62,9 @@ class CartModel {
       required this.customerName,
       required this.phone,
       required this.address,
+      this.scheduledFor = '',
       required this.isPaid,
+      this.isScheduled = false,
       required this.orderStatus,
       required this.deliveryBoyId,
       required this.isDelivered,
@@ -80,6 +88,7 @@ class CartModel {
       required this.ratingText,
       required this.chatId,
       required this.products,
+      required this.transactionFee,
       required this.discount,
       required this.totalPrice,
       this.notes = '',
@@ -96,7 +105,10 @@ class CartModel {
         customerName: data['customer_name'],
         phone: data['phone'],
         address: data['address'],
+        scheduledFor: data['scheduled_for'] ?? '',
         isPaid: data['isPaid'],
+        isScheduled: data['is_scheduled'] ??
+            ((data['scheduled_for']?.toString().trim().isNotEmpty ?? false)),
         orderStatus: data['order_status'],
         deliveryBoyId: data['deliveryBoyId'] ?? '',
         isDelivered: data['isDelivered'] ?? false,
@@ -126,6 +138,7 @@ class CartModel {
         totalPrice: data['total'] ?? '',
         notes: data['notes'] ?? '',
         packingFee: _parsePackingFee(data),
+        transactionFee: (data['transaction_fee'] as num?)?.toDouble() ?? 0.0,
         platformCharge: (data['platform_charge'] as num?)?.toDouble() ?? 0.0,
         preparationTimeMinutes: data['preparation_time'] != null
             ? int.tryParse(data['preparation_time'].toString()) ?? 0
@@ -140,7 +153,9 @@ class CartModel {
       'customer_name': customerName,
       'phone': phone,
       'address': address,
+      'scheduled_for': scheduledFor,
       'isPaid': isPaid,
+      'is_scheduled': isScheduled,
       'order_status': orderStatus,
       'deliveryBoyId': deliveryBoyId,
       'isDelivered': isDelivered,
@@ -161,6 +176,7 @@ class CartModel {
       'vendor_name': vendorName,
       'shop_image': shopImage,
       'vendor_phone': vendorPhone,
+      'transaction_fee': transactionFee,
       'chat_id': chatId,
       'products': products.map((e) => e.toMap()).toList(),
       'discount': discount,

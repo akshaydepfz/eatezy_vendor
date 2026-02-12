@@ -1,4 +1,5 @@
 import 'package:eatezy_vendor/view/chat/services/chat_service.dart';
+import 'package:eatezy_vendor/view/orders/services/order_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +7,10 @@ import 'package:intl/intl.dart';
 
 class ChatViewScreen extends StatefulWidget {
   final String chatId;
-  const ChatViewScreen({super.key, required this.chatId});
+  const ChatViewScreen({super.key, required this.chatId, this.customerId});
+
+  /// Customer ID when opened from order view - used to send chat notification.
+  final String? customerId;
 
   @override
   State<ChatViewScreen> createState() => _ChatViewScreenState();
@@ -31,9 +35,19 @@ class _ChatViewScreenState extends State<ChatViewScreen> {
   }
 
   void handleSendMessage(ChatProvider provider) async {
-    await provider.sendMessage(widget.chatId, _controller.text);
+    final messageText = _controller.text;
+    await provider.sendMessage(widget.chatId, messageText);
     _controller.clear();
     scrollToBottom();
+    // Send chat notification to customer (refer order_service pattern)
+    if (widget.customerId != null && messageText.trim().isNotEmpty) {
+      final orderService =
+          Provider.of<OrderService>(context, listen: false);
+      orderService.sendChatNotificationToCustomer(
+        widget.customerId!,
+        messageText.trim(),
+      );
+    }
   }
 
   void scrollToBottom() {

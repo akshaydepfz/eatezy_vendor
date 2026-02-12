@@ -72,6 +72,13 @@ class ChatScreen extends StatelessWidget {
                         final timeString = timestamp != null
                             ? TimeOfDay.fromDateTime(timestamp).format(context)
                             : "";
+                        final participants =
+                            List<String>.from(chat['participants'] ?? []);
+                        final customerId = participants.length == 2
+                            ? participants.firstWhere(
+                                (p) => p != chatProvider.userToken,
+                                orElse: () => '')
+                            : '';
 
                         return FutureBuilder<int>(
                           future: chatProvider.getUnreadCount(chatId),
@@ -88,8 +95,12 @@ class ChatScreen extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        ChatViewScreen(chatId: chatId),
+                                    builder: (_) => ChatViewScreen(
+                                      chatId: chatId,
+                                      customerId: customerId.isNotEmpty
+                                          ? customerId
+                                          : null,
+                                    ),
                                   ),
                                 );
                               },

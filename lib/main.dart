@@ -1,4 +1,5 @@
 import 'package:eatezy_vendor/utils/app_color.dart';
+import 'package:eatezy_vendor/utils/notification_service.dart';
 import 'package:eatezy_vendor/view/auth/screens/login_screen.dart';
 import 'package:eatezy_vendor/view/auth/services/login_service.dart';
 import 'package:eatezy_vendor/view/chat/services/chat_service.dart';
@@ -14,16 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
-// const AndroidNotificationChannel channel = AndroidNotificationChannel(
-//     'high_importance_channel', 'High Importance Notifications',
-//     description: 'This channel is used for important notifications.',
-//     importance: Importance.high,
-//     playSound: true);
-
-// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-//     FlutterLocalNotificationsPlugin();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -31,13 +22,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await initializeNotificationService();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  // await flutterLocalNotificationsPlugin
-  //     .resolvePlatformSpecificImplementation<
-  //         AndroidFlutterLocalNotificationsPlugin>()
-  //     ?.createNotificationChannel(channel);
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
   // ignore: unused_local_variable
