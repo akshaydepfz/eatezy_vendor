@@ -20,9 +20,86 @@ class ProductService extends ChangeNotifier {
   TextEditingController unitController = TextEditingController();
   TextEditingController mrpController = TextEditingController();
   TextEditingController priceController = TextEditingController();
+  List<Map<String, String>> availabilitySlots = [
+    {'from': '09:00', 'to': '18:00'}
+  ];
+
+  static TimeOfDay? _parseTime(String time) {
+    final parts = time.split(':');
+    if (parts.length >= 2) {
+      final h = int.tryParse(parts[0]);
+      final m = int.tryParse(parts[1]);
+      if (h != null && m != null && h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+        return TimeOfDay(hour: h, minute: m);
+      }
+    }
+    return null;
+  }
+
+  static String _formatTime(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  TimeOfDay availableFromTimeOfDayAt(int index) {
+    if (index < 0 || index >= availabilitySlots.length) {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+    return _parseTime(availabilitySlots[index]['from'] ?? '') ??
+        const TimeOfDay(hour: 9, minute: 0);
+  }
+
+  TimeOfDay availableToTimeOfDayAt(int index) {
+    if (index < 0 || index >= availabilitySlots.length) {
+      return const TimeOfDay(hour: 18, minute: 0);
+    }
+    return _parseTime(availabilitySlots[index]['to'] ?? '') ??
+        const TimeOfDay(hour: 18, minute: 0);
+  }
+
+  void setAvailableFromTimeAt(int index, TimeOfDay time) {
+    if (index < 0 || index >= availabilitySlots.length) return;
+    availabilitySlots[index]['from'] = _formatTime(time);
+    notifyListeners();
+  }
+
+  void setAvailableToTimeAt(int index, TimeOfDay time) {
+    if (index < 0 || index >= availabilitySlots.length) return;
+    availabilitySlots[index]['to'] = _formatTime(time);
+    notifyListeners();
+  }
+
+  void addAvailabilitySlot() {
+    availabilitySlots.add({'from': '09:00', 'to': '18:00'});
+    notifyListeners();
+  }
+
+  void removeAvailabilitySlot(int index) {
+    if (availabilitySlots.length == 1) {
+      availabilitySlots[0] = {'from': '09:00', 'to': '18:00'};
+      notifyListeners();
+      return;
+    }
+    if (index < 0 || index >= availabilitySlots.length) return;
+    availabilitySlots.removeAt(index);
+    notifyListeners();
+  }
   String? selectedItem;
   List<ProductModel>? products;
   List<CategoryModel>? category;
+  List<Map<String, String>> _buildAvailabilitySlots() {
+    final parsed = availabilitySlots
+        .map((slot) => {
+              'from': (slot['from'] ?? '').trim(),
+              'to': (slot['to'] ?? '').trim(),
+            })
+        .where((slot) => slot['from']!.isNotEmpty || slot['to']!.isNotEmpty)
+        .toList();
+    return parsed.isNotEmpty
+        ? parsed
+        : [
+            {'from': '09:00', 'to': '18:00'}
+          ];
+  }
 
   Future<void> onProductInit(ProductModel product) async {
     String price = product.price.toString();
@@ -34,6 +111,17 @@ class ProductService extends ChangeNotifier {
     mrpController.text = slashedPrice;
     selectedItem = product.category;
     NetworkImage = product.image;
+    availabilitySlots = product.availabilitySlots.isNotEmpty
+        ? product.availabilitySlots
+            .map((slot) => {
+                  'from': (slot['from'] ?? '09:00').toString(),
+                  'to': (slot['to'] ?? '18:00').toString(),
+                })
+            .toList()
+        : [
+            {'from': '09:00', 'to': '18:00'}
+          ];
+    notifyListeners();
   }
 
   void clear() {
@@ -42,7 +130,13 @@ class ProductService extends ChangeNotifier {
     priceController.clear();
     mrpController.clear();
     unitController.clear();
+    availabilitySlots = [
+      {'from': '09:00', 'to': '18:00'}
+    ];
     NetworkImage = null;
+    selectedItem = null;
+    image = null;
+    notifyListeners();
   }
 
   Future<void> updateProduct(BuildContext context, String id) async {
@@ -57,6 +151,7 @@ class ProductService extends ChangeNotifier {
         'category': selectedItem,
         'price': priceController.text,
         'slashedPrice': mrpController.text,
+        'availability_slots': _buildAvailabilitySlots(),
         'lastEdited': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       await fetchProducts();
@@ -76,6 +171,7 @@ class ProductService extends ChangeNotifier {
           'category': selectedItem,
           'price': priceController.text,
           'slashedPrice': mrpController.text,
+          'availability_slots': _buildAvailabilitySlots(),
           'lastEdited': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         isLoading = false;
@@ -228,6 +324,7 @@ class ProductService extends ChangeNotifier {
           'unitPerItem': unitController.text,
           'favorites': [],
           'shop_name': shopName,
+          'availability_slots': _buildAvailabilitySlots(),
         });
         await docRef.update({
           'id': docRef.id,
@@ -242,6 +339,9 @@ class ProductService extends ChangeNotifier {
         selectedItem = null;
         mrpController.clear();
         unitController.clear();
+        availabilitySlots = [
+          {'from': '09:00', 'to': '18:00'}
+        ];
         image = null;
         isLoading = false;
 

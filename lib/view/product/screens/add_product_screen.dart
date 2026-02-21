@@ -1,4 +1,5 @@
 import 'package:eatezy_vendor/models/catrgory_model.dart';
+import 'package:eatezy_vendor/utils/app_color.dart';
 import 'package:eatezy_vendor/utils/app_spacing.dart';
 import 'package:eatezy_vendor/view/auth/screens/primary_button.dart';
 import 'package:eatezy_vendor/view/product/services/product_service.dart';
@@ -17,6 +18,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
   void initState() {
     Provider.of<ProductService>(context, listen: false).clear();
     super.initState();
+  }
+
+  Future<void> _pickFromTime(ProductService provider, int index) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: provider.availableFromTimeOfDayAt(index),
+    );
+    if (picked != null) {
+      provider.setAvailableFromTimeAt(index, picked);
+    }
+  }
+
+  Future<void> _pickToTime(ProductService provider, int index) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: provider.availableToTimeOfDayAt(index),
+    );
+    if (picked != null) {
+      provider.setAvailableToTimeAt(index, picked);
+    }
   }
 
   @override
@@ -145,6 +166,126 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 PrimaryTextField(
                     title: 'Selling Price',
                     controller: provider.priceController),
+                AppSpacing.h10,
+                const Text('Availability Slots'),
+                AppSpacing.h10,
+                ...provider.availabilitySlots.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final slot = entry.value;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Slot ${index + 1}',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const Spacer(),
+                            if (provider.availabilitySlots.length > 1)
+                              IconButton(
+                                onPressed: () =>
+                                    provider.removeAvailabilitySlot(index),
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    color: Colors.red),
+                              ),
+                          ],
+                        ),
+                        InkWell(
+                          onTap: () => _pickFromTime(provider, index),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.schedule_rounded,
+                                    color: AppColor.primary, size: 22),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'From',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  slot['from'] ?? '09:00',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(Icons.chevron_right,
+                                    color: Colors.grey.shade400, size: 22),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: () => _pickToTime(provider, index),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.schedule_rounded,
+                                    color: AppColor.primary, size: 22),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'To',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  slot['to'] ?? '18:00',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey.shade700,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(Icons.chevron_right,
+                                    color: Colors.grey.shade400, size: 22),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: provider.addAvailabilitySlot,
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: const Text('Add Slot'),
+                  ),
+                ),
                 AppSpacing.h10,
                 AppSpacing.h20,
                 PrimaryButton(

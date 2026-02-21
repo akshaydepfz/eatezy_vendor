@@ -214,9 +214,11 @@ class ProductsCard extends StatelessWidget {
                 ),
                 height: 80,
                 width: MediaQuery.of(context).size.width,
-                child: Row(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -246,7 +248,23 @@ class ProductsCard extends StatelessWidget {
                         Text('0', style: AppStyle.titleBold),
                       ],
                     ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Available', style: AppStyle.subSmall),
+                        Text(
+                          product.availabilitySlots
+                              .map((slot) =>
+                                  '${slot['from'] ?? '--:--'} - ${slot['to'] ?? '--:--'}')
+                              .join(', '),
+                          style: AppStyle.titleBold,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ],
+                ),
                 ),
               ),
               const SizedBox(height: 10),
