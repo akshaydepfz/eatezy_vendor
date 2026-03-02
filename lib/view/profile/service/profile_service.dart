@@ -19,9 +19,10 @@ class ProfileService extends ChangeNotifier {
   File? image2;
   bool isLoading = false;
 
-  /// Opening and closing time as TimeOfDay for picker; stored as "HH:mm" in Firestore.
-  TimeOfDay? openingTime;
-  TimeOfDay? closingTime;
+  /// Multiple opening hours slots. Same format as product availability_slots.
+  List<Map<String, String>> openingHoursSlots = [
+    {'from': '09:00', 'to': '22:00'}
+  ];
 
   static TimeOfDay? _parseTime(String time) {
     final parts = time.split(':');
@@ -39,20 +40,49 @@ class ProfileService extends ChangeNotifier {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
-  void setOpeningTime(TimeOfDay time) {
-    openingTime = time;
+  TimeOfDay openingTimeOfDayAt(int index) {
+    if (index < 0 || index >= openingHoursSlots.length) {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+    return _parseTime(openingHoursSlots[index]['from'] ?? '') ??
+        const TimeOfDay(hour: 9, minute: 0);
+  }
+
+  TimeOfDay closingTimeOfDayAt(int index) {
+    if (index < 0 || index >= openingHoursSlots.length) {
+      return const TimeOfDay(hour: 22, minute: 0);
+    }
+    return _parseTime(openingHoursSlots[index]['to'] ?? '') ??
+        const TimeOfDay(hour: 22, minute: 0);
+  }
+
+  void setOpeningTimeAt(int index, TimeOfDay time) {
+    if (index < 0 || index >= openingHoursSlots.length) return;
+    openingHoursSlots[index]['from'] = _formatTime(time);
     notifyListeners();
   }
 
-  void setClosingTime(TimeOfDay time) {
-    closingTime = time;
+  void setClosingTimeAt(int index, TimeOfDay time) {
+    if (index < 0 || index >= openingHoursSlots.length) return;
+    openingHoursSlots[index]['to'] = _formatTime(time);
     notifyListeners();
   }
 
-  String get openingTimeDisplay =>
-      openingTime != null ? _formatTime(openingTime!) : '--:--';
-  String get closingTimeDisplay =>
-      closingTime != null ? _formatTime(closingTime!) : '--:--';
+  void addOpeningHoursSlot() {
+    openingHoursSlots.add({'from': '09:00', 'to': '22:00'});
+    notifyListeners();
+  }
+
+  void removeOpeningHoursSlot(int index) {
+    if (openingHoursSlots.length == 1) {
+      openingHoursSlots[0] = {'from': '09:00', 'to': '22:00'};
+      notifyListeners();
+      return;
+    }
+    if (index < 0 || index >= openingHoursSlots.length) return;
+    openingHoursSlots.removeAt(index);
+    notifyListeners();
+  }
 
   Future<void> getVendor() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -68,8 +98,14 @@ class ProfileService extends ChangeNotifier {
         latLng = LatLng(double.parse(vendor!.lat), double.parse(vendor!.long));
         nameController.text = vendor!.shopName;
         packingFeeController.text = vendor!.packingFee;
-        openingTime = _parseTime(vendor!.openingTime);
-        closingTime = _parseTime(vendor!.closingTime);
+        openingHoursSlots = vendor!.openingHoursSlots.isNotEmpty
+            ? vendor!.openingHoursSlots
+                .map((slot) => {
+                      'from': (slot['from'] ?? '09:00').toString(),
+                      'to': (slot['to'] ?? '22:00').toString(),
+                    })
+                .toList()
+            : [{'from': '09:00', 'to': '22:00'}];
         notifyListeners();
       } else {}
     } catch (_) {}
@@ -124,11 +160,20 @@ class ProfileService extends ChangeNotifier {
     try {
       final docRef =
           FirebaseFirestore.instance.collection('vendors').doc(vendor!.id);
+      final slots = openingHoursSlots
+          .map((slot) => {
+                'from': (slot['from'] ?? '').trim(),
+                'to': (slot['to'] ?? '').trim(),
+              })
+          .where((s) => (s['from'] ?? '').isNotEmpty || (s['to'] ?? '').isNotEmpty)
+          .toList();
+
       Map<String, dynamic> dataToUpdate = {
         "shop_name": nameController.text,
         "packing_fee": num.tryParse(packingFeeController.text.trim()) ?? 0,
-        if (openingTime != null) "opening_time": _formatTime(openingTime!),
-        if (closingTime != null) "closing_time": _formatTime(closingTime!),
+        "opening_hours_slots": slots.isNotEmpty
+            ? slots
+            : [{'from': '09:00', 'to': '22:00'}],
       };
 
       if (image != null) {

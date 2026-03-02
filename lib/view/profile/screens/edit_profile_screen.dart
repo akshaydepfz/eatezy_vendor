@@ -10,6 +10,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:provider/provider.dart';
 
+Future<void> _pickOpeningTime(
+    BuildContext context, ProfileService provider, int index) async {
+  final picked = await showTimePicker(
+    context: context,
+    initialTime: provider.openingTimeOfDayAt(index),
+  );
+  if (picked != null) provider.setOpeningTimeAt(index, picked);
+}
+
+Future<void> _pickClosingTime(
+    BuildContext context, ProfileService provider, int index) async {
+  final picked = await showTimePicker(
+    context: context,
+    initialTime: provider.closingTimeOfDayAt(index),
+  );
+  if (picked != null) provider.setClosingTimeAt(index, picked);
+}
+
 class ProfileEditScreen extends StatelessWidget {
   const ProfileEditScreen({super.key});
 
@@ -185,101 +203,130 @@ class ProfileEditScreen extends StatelessWidget {
               ),
               AppSpacing.h20,
 
-              // Opening & closing time card
+              // Opening & closing time card (multiple slots)
               _SectionCard(
                 title: 'Opening & Closing Time',
-                subtitle: 'When your restaurant opens and closes',
+                subtitle:
+                    'Add multiple time slots (e.g. 9:00–14:00, 17:00–22:00)',
                 child: Column(
                   children: [
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showTimePicker(
-                          context: context,
-                          initialTime: provider.openingTime ??
-                              const TimeOfDay(hour: 9, minute: 0),
-                        );
-                        if (picked != null) provider.setOpeningTime(picked);
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
+                    ...provider.openingHoursSlots.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final slot = entry.value;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade300),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Row(
+                        child: Column(
                           children: [
-                            Icon(Icons.schedule_rounded,
-                                color: AppColor.primary, size: 22),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Opening time',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                            Row(
+                              children: [
+                                Text(
+                                  'Slot ${index + 1}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const Spacer(),
+                                if (provider.openingHoursSlots.length > 1)
+                                  IconButton(
+                                    onPressed: () =>
+                                        provider.removeOpeningHoursSlot(index),
+                                    icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.red),
+                                  ),
+                              ],
+                            ),
+                            InkWell(
+                              onTap: () => _pickOpeningTime(context, provider, index),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.schedule_rounded,
+                                        color: AppColor.primary, size: 22),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'From',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      slot['from'] ?? '09:00',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey.shade700,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(Icons.chevron_right,
+                                        color: Colors.grey.shade400, size: 22),
+                                  ],
+                                ),
                               ),
                             ),
-                            const Spacer(),
-                            Text(
-                              provider.openingTimeDisplay,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade700,
-                                fontWeight: FontWeight.w500,
+                            const SizedBox(height: 10),
+                            InkWell(
+                              onTap: () => _pickClosingTime(context, provider, index),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.schedule_rounded,
+                                        color: AppColor.primary, size: 22),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'To',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      slot['to'] ?? '22:00',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey.shade700,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(Icons.chevron_right,
+                                        color: Colors.grey.shade400, size: 22),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Icon(Icons.chevron_right,
-                                color: Colors.grey.shade400, size: 22),
                           ],
                         ),
-                      ),
-                    ),
-                    AppSpacing.h10,
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showTimePicker(
-                          context: context,
-                          initialTime: provider.closingTime ??
-                              const TimeOfDay(hour: 22, minute: 0),
-                        );
-                        if (picked != null) provider.setClosingTime(picked);
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.schedule_rounded,
-                                color: AppColor.primary, size: 22),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Closing time',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              provider.closingTimeDisplay,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade700,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(Icons.chevron_right,
-                                color: Colors.grey.shade400, size: 22),
-                          ],
-                        ),
+                      );
+                    }),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: provider.addOpeningHoursSlot,
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('Add Slot'),
                       ),
                     ),
                   ],

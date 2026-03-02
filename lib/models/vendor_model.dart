@@ -17,8 +17,31 @@ class VendorModel {
   final String long;
   final String banner;
   final String packingFee;
+
+  /// Optional fallback for old data.
   final String openingTime;
   final String closingTime;
+
+  /// Multiple time slots (e.g. 9:00–12:00, 17:00–22:00). Same format as product availability_slots.
+  final List<Map<String, String>> openingHoursSlots;
+
+  /// Returns openingTime from first slot if slots exist, else uses openingTime field.
+  String get effectiveOpeningTime {
+    if (openingHoursSlots.isNotEmpty &&
+        openingHoursSlots.first['from']?.isNotEmpty == true) {
+      return openingHoursSlots.first['from']!;
+    }
+    return openingTime;
+  }
+
+  /// Returns closingTime from first slot if slots exist, else uses closingTime field.
+  String get effectiveClosingTime {
+    if (openingHoursSlots.isNotEmpty &&
+        openingHoursSlots.first['to']?.isNotEmpty == true) {
+      return openingHoursSlots.first['to']!;
+    }
+    return closingTime;
+  }
 
   VendorModel(
       {required this.id,
@@ -40,7 +63,8 @@ class VendorModel {
       required this.banner,
       required this.packingFee,
       required this.openingTime,
-      required this.closingTime});
+      required this.closingTime,
+      this.openingHoursSlots = const []});
 
   factory VendorModel.fromFirestore(
     Map<String, dynamic> data,
@@ -48,6 +72,25 @@ class VendorModel {
     String? estimateDistance,
     String? estimateTime,
   }) {
+    final openingTime = data['opening_time']?.toString() ?? '09:00';
+    final closingTime = data['closing_time']?.toString() ?? '22:00';
+
+    List<Map<String, String>> parsedSlots = [];
+    final rawSlots = data['opening_hours_slots'];
+    if (rawSlots is List) {
+      parsedSlots = rawSlots
+          .whereType<Map>()
+          .map((slot) => {
+                'from': (slot['from'] ?? '').toString(),
+                'to': (slot['to'] ?? '').toString(),
+              })
+          .where((s) => (s['from'] ?? '').isNotEmpty || (s['to'] ?? '').isNotEmpty)
+          .toList();
+    }
+    if (parsedSlots.isEmpty) {
+      parsedSlots = [{'from': openingTime, 'to': closingTime}];
+    }
+
     return VendorModel(
         id: id,
         firstName: data['first_name'] ?? '',
@@ -67,7 +110,8 @@ class VendorModel {
         long: data['long'] ?? '',
         banner: data['banner'] ?? '',
         packingFee: data['packing_fee']?.toString() ?? '0',
-        openingTime: data['opening_time']?.toString() ?? '09:00',
-        closingTime: data['closing_time']?.toString() ?? '22:00');
+        openingTime: openingTime,
+        closingTime: closingTime,
+        openingHoursSlots: parsedSlots);
   }
 }
