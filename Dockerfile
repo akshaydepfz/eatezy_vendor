@@ -3,6 +3,9 @@ FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
 
+# Enable web support (required in some Docker environments)
+RUN flutter config --enable-web
+
 # Copy pubspec files first for better layer caching
 COPY pubspec.yaml pubspec.lock ./
 
@@ -12,8 +15,8 @@ RUN flutter pub get
 # Copy the rest of the source code
 COPY . .
 
-# Build Flutter web app
-RUN flutter build web --release
+# Clean and build (--no-source-maps and --web-renderer html reduce memory usage)
+RUN flutter clean && flutter pub get && flutter build web --release --no-source-maps --web-renderer html
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
