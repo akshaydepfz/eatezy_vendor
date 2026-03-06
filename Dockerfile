@@ -15,8 +15,8 @@ RUN flutter pub get
 # Copy the rest of the source code
 COPY . .
 
-# Clean and build (--no-source-maps and --web-renderer html reduce memory usage)
-RUN flutter clean && flutter pub get && flutter build web --release --no-source-maps --web-renderer html
+# Clean and build (--no-source-maps reduces memory usage during compilation)
+RUN flutter clean && flutter pub get && flutter build web --release --no-source-maps
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
