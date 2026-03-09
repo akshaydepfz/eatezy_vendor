@@ -66,6 +66,14 @@ class VendorModel {
       required this.closingTime,
       this.openingHoursSlots = const []});
 
+  static bool _parseBool(dynamic v, bool def) {
+    if (v == null) return def;
+    if (v is bool) return v;
+    if (v is String) return v.toLowerCase() == 'true' || v == '1';
+    if (v is int) return v != 0;
+    return def;
+  }
+
   factory VendorModel.fromFirestore(
     Map<String, dynamic> data,
     String id, {
@@ -102,8 +110,8 @@ class VendorModel {
         shopAddress: data['shop_address'] ?? '',
         vendorImage: data['vendor_image'] ?? '',
         shopImage: data['shop_image'] ?? '',
-        isActive: data['is_active'] ?? false,
-        isSuspend: data['is_suspend'] ?? false,
+        isActive: _parseBool(data['is_active'], false),
+        isSuspend: _parseBool(data['is_suspend'], false),
         estimateDistance: estimateDistance ?? data['estimateDistance'] ?? '',
         estimateTime: estimateTime ?? data['estimateTime'] ?? '',
         lat: data['lat'] ?? '',

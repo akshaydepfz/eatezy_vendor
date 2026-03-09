@@ -103,7 +103,7 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'Eatezy Vendor',
           theme: ThemeData(
-            textTheme: GoogleFonts.rubikTextTheme(Theme.of(context).textTheme),
+            textTheme: GoogleFonts.rubikTextTheme(ThemeData().textTheme),
             colorScheme: ColorScheme.fromSeed(seedColor: AppColor.primary),
             useMaterial3: true,
           ),
