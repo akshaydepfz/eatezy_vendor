@@ -39,20 +39,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
-  <!-- Safari/iOS: force WebGL 1 fallback (CanvasKit WebGL 2 has issues on WebKit) -->
-  <script>
-    (function() {
-      var ua = navigator.userAgent;
-      var isWebKit = ua.indexOf('Safari') !== -1 && ua.indexOf('Chrome') === -1 || ua.indexOf('CriOS') !== -1;
-      if (isWebKit) {
-        var orig = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function(type) {
-          if (type === 'webgl2') return orig.call(this, 'webgl', arguments[1]);
-          return orig.apply(this, arguments);
-        };
-      }
-    })();
-  </script>
+  <!-- Removed WebGL polyfill: it caused getContext("2d") to return null in Safari (CanvasKit uses 2d for fallback) -->
   <style>
     html, body { margin: 0; min-height: 100vh; min-height: -webkit-fill-available; }
     #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; min-height: 100vh; min-height: -webkit-fill-available; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; font-family: system-ui; color: #333; z-index: 9999; padding: 24px; text-align: center; box-sizing: border-box; }
