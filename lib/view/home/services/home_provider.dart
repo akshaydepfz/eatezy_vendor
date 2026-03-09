@@ -6,6 +6,7 @@ import 'package:eatezy_vendor/view/offer/screens/offers_screen.dart';
 import 'package:eatezy_vendor/view/orders/screens/orders_screen.dart';
 import 'package:eatezy_vendor/view/product/screens/product_screen.dart';
 import 'package:eatezy_vendor/view/profile/screens/profile_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,7 @@ class HomeProvider extends ChangeNotifier {
   }
 
   Future<void> updateAdminFcmToken() async {
+    if (kIsWeb) return;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String id = prefs.getString('token') ?? "";
     try {
@@ -63,6 +65,7 @@ class HomeProvider extends ChangeNotifier {
   }
 
   Future<String?> getFcmToken() async {
+    if (kIsWeb) return null;
     try {
       FirebaseMessaging messaging = FirebaseMessaging.instance;
 

@@ -62,10 +62,8 @@ Future<void> main() async {
       badge: true,
       sound: true,
     );
-  } else {
-    // Web: Firebase Messaging setup - avoid requestPermission during load (Safari blocks it)
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   }
+  // Web: no Firebase Messaging (no permission prompts, token, or push notifications)
   final pref = await SharedPreferences.getInstance();
   String token = pref.getString('token') ?? '';
   runApp(MyApp(

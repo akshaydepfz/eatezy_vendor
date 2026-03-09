@@ -2,6 +2,7 @@ import 'package:eatezy_vendor/utils/app_color.dart';
 import 'package:eatezy_vendor/utils/notification_service.dart';
 import 'package:eatezy_vendor/view/home/services/home_provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,32 +17,34 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   void initState() {
     Provider.of<HomeProvider>(context, listen: false).startVendorStream();
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      showForegroundNotification(message);
-    });
+    if (!kIsWeb) {
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        showForegroundNotification(message);
+      });
 
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        RemoteNotification? notification = message.notification;
+        AndroidNotification? android = message.notification?.android;
 
-      if (notification != null && android != null) {
-        showDialog(
-            context: context,
-            builder: (_) {
-              return AlertDialog(
-                title: Text(notification.title.toString()),
-                content: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(notification.body.toString()),
-                    ],
+        if (notification != null && android != null) {
+          showDialog(
+              context: context,
+              builder: (_) {
+                return AlertDialog(
+                  title: Text(notification.title.toString()),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(notification.body.toString()),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            });
-      }
-    });
+                );
+              });
+        }
+      });
+    }
     super.initState();
   }
 

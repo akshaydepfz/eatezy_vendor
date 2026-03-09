@@ -21,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     Provider.of<OrderService>(context, listen: false).fetchOrders();
     Provider.of<OrderService>(context, listen: false).fetchCustomers();
-    // Web: updateAdminFcmToken/getToken triggers permission prompt - must run from user gesture
     if (!kIsWeb) {
       Provider.of<HomeProvider>(context, listen: false).updateAdminFcmToken();
     }
@@ -64,11 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       AppSpacing.h10,
                       GestureDetector(
-                        onTap: () async {
-                          // Web: FCM token/permission must be requested from user gesture
-                          if (kIsWeb) {
-                            await provider.updateAdminFcmToken();
-                          }
+                        onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
