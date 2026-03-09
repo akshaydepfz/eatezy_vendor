@@ -50,20 +50,51 @@
   </script>
   <div id="loading" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;font-family:system-ui;color:#333;z-index:9999;padding:24px;text-align:center;">
     <span id="loading-text" style="font-size:18px;">Loading...</span>
-    <div id="loading-fallback" style="display:none;margin-top:20px;">
-      <p style="color:#666;margin-bottom:16px;">Having trouble loading? Try:</p>
-      <button onclick="location.reload()" style="padding:12px 24px;font-size:16px;background:#0175C2;color:#fff;border:none;border-radius:8px;cursor:pointer;">Refresh</button>
-      <p style="color:#999;font-size:14px;margin-top:16px;">Or clear Safari cache: Settings → Safari → Clear History and Website Data</p>
+    <div id="loading-fallback" style="display:none;margin-top:20px;max-width:400px;">
+      <p id="error-message" style="color:#c62828;margin-bottom:16px;font-size:14px;word-break:break-word;"></p>
+      <button onclick="location.reload()" style="padding:12px 24px;font-size:16px;background:#0175C2;color:#fff;border:none;border-radius:8px;cursor:pointer;">Try Again</button>
     </div>
   </div>
+  <script>
+    (function() {
+      window.loadError = null;
+      window.onerror = function(msg, url, line, col, err) {
+        window.loadError = msg || (err && err.message) || 'Unknown error';
+        if (err && err.stack) window.loadError += ' (' + err.stack.split('\n')[0] + ')';
+        return false;
+      };
+      window.addEventListener('unhandledrejection', function(e) {
+        window.loadError = (e.reason && (e.reason.message || String(e.reason))) || 'Promise rejected';
+      });
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
   <script>
     (function() {
       var loading = document.getElementById('loading');
       var loadingText = document.getElementById('loading-text');
       var fallback = document.getElementById('loading-fallback');
+      var errorMsg = document.getElementById('error-message');
+      var script = document.querySelector('script[src*="flutter_bootstrap"]');
+      if (script) {
+        script.onerror = function() {
+          window.loadError = 'Failed to load app script. Check your network connection.';
+        };
+      }
+      window.addEventListener('error', function(e) {
+        if (e.message) window.loadError = e.message;
+      }, true);
       function checkLoaded() {
         return document.querySelector('canvas') && document.querySelector('canvas').width > 0;
+      }
+      function showFallback() {
+        if (!checkLoaded() && loading && fallback && errorMsg) {
+          if (loadingText) loadingText.style.display = 'none';
+          errorMsg.textContent = window.loadError || 'Failed to load. Please check your connection and try again.';
+          fallback.style.display = 'block';
+        } else if (loading) {
+          loading.style.display = 'none';
+        }
       }
       var hideInterval = setInterval(function() {
         if (checkLoaded()) {
@@ -73,12 +104,7 @@
       }, 300);
       setTimeout(function() {
         clearInterval(hideInterval);
-        if (!checkLoaded() && loading && fallback) {
-          if (loadingText) loadingText.style.display = 'none';
-          fallback.style.display = 'block';
-        } else if (loading) {
-          loading.style.display = 'none';
-        }
+        showFallback();
       }, 8000);
     })();
   </script>
