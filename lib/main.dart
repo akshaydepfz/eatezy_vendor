@@ -25,17 +25,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase with platform-specific options
+  // Initialize Firebase with platform-specific options (must complete before any Firebase usage)
   if (kIsWeb) {
-    // Web Firebase configuration
-    // To get your web app ID:
-    // 1. Go to https://console.firebase.google.com/
-    // 2. Select your project (eatezy-63f35)
-    // 3. Click the gear icon ⚙️ > Project settings
-    // 4. Scroll down to "Your apps" section
-    // 5. If you don't have a web app, click "Add app" and select Web (</>)
-    // 6. Copy the "App ID" (format: 1:366816004932:web:xxxxx)
-    // 7. Replace "YOUR_WEB_APP_ID" below with your actual web app ID
     await Firebase.initializeApp(
       options: const FirebaseOptions(
         apiKey: "AIzaSyDof_SGroqWurKEaW0XuFwLpDsmV1Y34S4",

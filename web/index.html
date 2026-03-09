@@ -18,7 +18,6 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
@@ -32,6 +31,13 @@
 
   <title>eatezy_vendor</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase JS SDK - required for Flutter Firebase on web -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
   <!-- Safari/iOS: force WebGL 1 fallback (CanvasKit WebGL 2 has issues on WebKit) -->
@@ -104,7 +110,8 @@
         }
       }
       var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      var timeoutMs = isIOS ? 6000 : 8000;
+      var isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      var timeoutMs = isLocalhost ? 60000 : (isIOS ? 15000 : 25000);
       var hideInterval = setInterval(function() {
         if (checkLoaded()) {
           clearInterval(hideInterval);
