@@ -34,15 +34,53 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <div id="loading" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;font-family:system-ui;color:#666;z-index:9999;">
-    <span>Loading...</span>
+  <!-- Safari/iOS: force WebGL 1 fallback (CanvasKit WebGL 2 has issues on WebKit) -->
+  <script>
+    (function() {
+      var ua = navigator.userAgent;
+      var isWebKit = ua.indexOf('Safari') !== -1 && ua.indexOf('Chrome') === -1 || ua.indexOf('CriOS') !== -1;
+      if (isWebKit) {
+        var orig = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function(type) {
+          if (type === 'webgl2') return orig.call(this, 'webgl', arguments[1]);
+          return orig.apply(this, arguments);
+        };
+      }
+    })();
+  </script>
+  <div id="loading" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;font-family:system-ui;color:#333;z-index:9999;padding:24px;text-align:center;">
+    <span id="loading-text" style="font-size:18px;">Loading...</span>
+    <div id="loading-fallback" style="display:none;margin-top:20px;">
+      <p style="color:#666;margin-bottom:16px;">Having trouble loading? Try:</p>
+      <button onclick="location.reload()" style="padding:12px 24px;font-size:16px;background:#0175C2;color:#fff;border:none;border-radius:8px;cursor:pointer;">Refresh</button>
+      <p style="color:#999;font-size:14px;margin-top:16px;">Or clear Safari cache: Settings → Safari → Clear History and Website Data</p>
+    </div>
   </div>
   <script src="flutter_bootstrap.js" async></script>
   <script>
-    setTimeout(function() {
+    (function() {
       var loading = document.getElementById('loading');
-      if (loading) loading.style.display = 'none';
-    }, 5000);
+      var loadingText = document.getElementById('loading-text');
+      var fallback = document.getElementById('loading-fallback');
+      function checkLoaded() {
+        return document.querySelector('canvas') && document.querySelector('canvas').width > 0;
+      }
+      var hideInterval = setInterval(function() {
+        if (checkLoaded()) {
+          clearInterval(hideInterval);
+          if (loading) loading.style.display = 'none';
+        }
+      }, 300);
+      setTimeout(function() {
+        clearInterval(hideInterval);
+        if (!checkLoaded() && loading && fallback) {
+          if (loadingText) loadingText.style.display = 'none';
+          fallback.style.display = 'block';
+        } else if (loading) {
+          loading.style.display = 'none';
+        }
+      }, 8000);
+    })();
   </script>
 </body>
 </html>
