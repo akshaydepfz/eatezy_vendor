@@ -17,8 +17,8 @@ COPY . .
 
 # Clean and build (--no-source-maps reduces memory usage during compilation)
 # --base-href / ensures correct asset loading when served from root
-# --web-renderer canvaskit: required for Safari - HTML renderer shows blank screen on Safari 16.4+
-RUN flutter clean && flutter pub get && flutter build web --release --no-source-maps --base-href / --no-web-resources-cdn --web-renderer canvaskit
+# CanvasKit is now the default renderer (--web-renderer was removed in Flutter 3.24+)
+RUN flutter clean && flutter pub get && flutter build web --release --no-source-maps --base-href / --no-web-resources-cdn
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
