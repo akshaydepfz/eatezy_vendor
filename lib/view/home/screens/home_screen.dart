@@ -5,6 +5,7 @@ import 'package:eatezy_vendor/view/home/services/home_provider.dart';
 import 'package:eatezy_vendor/view/orders/services/order_service.dart';
 import 'package:eatezy_vendor/view/orders/widgets/order_card.dart';
 import 'package:eatezy_vendor/view/profile/screens/my_earnings_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     Provider.of<OrderService>(context, listen: false).fetchOrders();
     Provider.of<OrderService>(context, listen: false).fetchCustomers();
-    Provider.of<HomeProvider>(context, listen: false).updateAdminFcmToken();
+    // Web: updateAdminFcmToken/getToken triggers permission prompt - must run from user gesture
+    if (!kIsWeb) {
+      Provider.of<HomeProvider>(context, listen: false).updateAdminFcmToken();
+    }
     Provider.of<HomeProvider>(context, listen: false).fetchVendor();
     super.initState();
   }
@@ -60,12 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       AppSpacing.h10,
                       GestureDetector(
-                        onTap: () {
-                          final token = provider.getFcmToken();
-                          if (token != null) {
-                            print("FCM Token: $token");
-                          } else {
-                            print("FCM Token is null");
+                        onTap: () async {
+                          // Web: FCM token/permission must be requested from user gesture
+                          if (kIsWeb) {
+                            await provider.updateAdminFcmToken();
                           }
                           Navigator.push(
                             context,
