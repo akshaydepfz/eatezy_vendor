@@ -18,7 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
@@ -48,11 +48,18 @@
       }
     })();
   </script>
-  <div id="loading" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;font-family:system-ui;color:#333;z-index:9999;padding:24px;text-align:center;">
+  <style>
+    html, body { margin: 0; min-height: 100vh; min-height: -webkit-fill-available; }
+    #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; min-height: 100vh; min-height: -webkit-fill-available; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; font-family: system-ui; color: #333; z-index: 9999; padding: 24px; text-align: center; box-sizing: border-box; }
+    #loading-fallback { display: none; margin-top: 20px; max-width: 400px; }
+    #error-message { color: #c62828; margin-bottom: 16px; font-size: 14px; word-break: break-word; }
+    #retry-btn { padding: 12px 24px; font-size: 16px; background: #0175C2; color: #fff; border: none; border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; min-height: 44px; }
+  </style>
+  <div id="loading">
     <span id="loading-text" style="font-size:18px;">Loading...</span>
-    <div id="loading-fallback" style="display:none;margin-top:20px;max-width:400px;">
-      <p id="error-message" style="color:#c62828;margin-bottom:16px;font-size:14px;word-break:break-word;"></p>
-      <button onclick="location.reload()" style="padding:12px 24px;font-size:16px;background:#0175C2;color:#fff;border:none;border-radius:8px;cursor:pointer;">Try Again</button>
+    <div id="loading-fallback">
+      <p id="error-message"></p>
+      <button id="retry-btn" onclick="location.reload()">Try Again</button>
     </div>
   </div>
   <script>
@@ -96,6 +103,8 @@
           loading.style.display = 'none';
         }
       }
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var timeoutMs = isIOS ? 6000 : 8000;
       var hideInterval = setInterval(function() {
         if (checkLoaded()) {
           clearInterval(hideInterval);
@@ -105,7 +114,7 @@
       setTimeout(function() {
         clearInterval(hideInterval);
         showFallback();
-      }, 8000);
+      }, timeoutMs);
     })();
   </script>
 </body>
