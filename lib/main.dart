@@ -50,26 +50,31 @@ Future<void> main() async {
     // Mobile platforms (Android/iOS) - uses google-services.json / GoogleService-Info.plist
     await Firebase.initializeApp();
   }
-  await initializeNotificationService();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  if (!kIsWeb) {
+    await initializeNotificationService();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  // ignore: unused_local_variable
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
+    // ignore: unused_local_variable
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
 
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  } else {
+    // Web: Firebase Messaging setup - avoid requestPermission during load (Safari blocks it)
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
   final pref = await SharedPreferences.getInstance();
   String token = pref.getString('token') ?? '';
   runApp(MyApp(

@@ -1,4 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Notification channel for FCM messages on Android
@@ -32,6 +33,7 @@ Future<void> initializeNotificationService() async {
 
 /// Shows a local notification when FCM message is received in foreground
 Future<void> showForegroundNotification(RemoteMessage message) async {
+  if (kIsWeb) return; // FlutterLocalNotifications not supported on web
   final notification = message.notification;
 
   if (notification != null) {

@@ -34,22 +34,15 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <!-- Safari/iOS WebGL 2 workaround: force WebGL 1 fallback for CanvasKit compatibility -->
-  <script>
-    (function() {
-      var ua = navigator.userAgent;
-      var isSafariOrIOS = (ua.indexOf("Safari") !== -1 && ua.indexOf("Chrome") === -1) || ua.indexOf("CriOS") !== -1;
-      if (isSafariOrIOS) {
-        var originalGetContext = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function() {
-          if (arguments[0] === "webgl2") {
-            return null;
-          }
-          return originalGetContext.apply(this, arguments);
-        };
-      }
-    })();
-  </script>
+  <div id="loading" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;font-family:system-ui;color:#666;z-index:9999;">
+    <span>Loading...</span>
+  </div>
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    setTimeout(function() {
+      var loading = document.getElementById('loading');
+      if (loading) loading.style.display = 'none';
+    }, 5000);
+  </script>
 </body>
 </html>
