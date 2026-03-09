@@ -16,7 +16,8 @@ RUN flutter pub get
 COPY . .
 
 # Clean and build (--no-source-maps reduces memory usage during compilation)
-RUN flutter clean && flutter pub get && flutter build web --release --no-source-maps
+# Use HTML renderer for Safari/iOS compatibility (CanvasKit has WebAssembly issues on WebKit)
+RUN flutter clean && flutter pub get && flutter build web --release --no-source-maps --web-renderer=html
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
