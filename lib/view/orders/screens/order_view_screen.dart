@@ -432,6 +432,12 @@ class OrderDetailsScreen extends StatelessWidget {
             _buildOrderHeaderCard(
                 context, effectiveOrder, orderIdShort, dateStr, provider),
             const SizedBox(height: 16),
+            // Assigned delivery partner (for online delivery orders)
+            if (effectiveOrder.isOnlineDelivery &&
+                effectiveOrder.deliveryBoyId.isNotEmpty) ...[
+              _buildDeliveryBoyCard(context, effectiveOrder),
+              const SizedBox(height: 16),
+            ],
             // Items section
             _buildItemsCard(context, effectiveOrder),
             const SizedBox(height: 16),
@@ -560,6 +566,39 @@ class OrderDetailsScreen extends StatelessWidget {
                   fontSize: 14,
                   color: Colors.grey.shade700,
                   fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey.shade50,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: Colors.blueGrey.shade200,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      orderData.isOnlineDelivery
+                          ? Icons.delivery_dining_outlined
+                          : Icons.store_mall_directory_outlined,
+                      size: 14,
+                      color: Colors.blueGrey.shade700,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      orderData.isOnlineDelivery ? 'Online delivery' : 'Pickup',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.blueGrey.shade700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -947,6 +986,176 @@ class OrderDetailsScreen extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveryBoyCard(BuildContext context, CartModel orderData) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: StreamBuilder<
+          QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('delivery_boys')
+            .where(FieldPath.documentId,
+                isEqualTo: orderData.deliveryBoyId)
+            .limit(1)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState ==
+              ConnectionState.waiting) {
+            return const Center(
+              child: SizedBox(
+                height: 32,
+                width: 32,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            );
+          }
+          if (snapshot.hasError ||
+              snapshot.data == null ||
+              snapshot.data!.docs.isEmpty) {
+            return Row(
+              children: [
+                Icon(Icons.delivery_dining_rounded,
+                    color: AppColor.primary, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Delivery partner details not available',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          final data = snapshot.data!.docs.first.data();
+          final name = (data['name'] ?? '').toString();
+          final phone = (data['phone'] ?? '').toString();
+          final vehicle = (data['vehicle_number'] ?? '').toString();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.delivery_dining_rounded,
+                      color: AppColor.primary, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Delivery Partner',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey.shade900,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () {
+                      final provider = Provider.of<OrderService>(
+                        context,
+                        listen: false,
+                      );
+                      _showAssignDeliveryBoySheet(
+                          context, provider, orderData);
+                    },
+                    icon: const Icon(
+                      Icons.swap_horiz_rounded,
+                      size: 18,
+                    ),
+                    label: const Text('Change'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColor.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor:
+                        AppColor.primary.withOpacity(0.12),
+                    child: const Icon(
+                      Icons.person,
+                      color: AppColor.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name.isEmpty
+                              ? 'Unnamed delivery partner'
+                              : name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey.shade900,
+                          ),
+                        ),
+                        if (phone.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            phone,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                        if (vehicle.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Vehicle: $vehicle',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.phone_outlined),
+                    color: AppColor.primary,
+                    onPressed: phone.isEmpty
+                        ? null
+                        : () => launchUrl(
+                              Uri(
+                                scheme: 'tel',
+                                path: phone,
+                              ),
+                            ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1380,21 +1589,37 @@ class OrderDetailsScreen extends StatelessWidget {
         ),
       );
     } else if (orderData.orderStatus == 'Order Accepted') {
+      final needsDeliveryAssignment =
+          orderData.isOnlineDelivery && orderData.deliveryBoyId.isEmpty;
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: PrimaryButton(
-            title: 'Ready For Pickup',
-            isLoading: false,
-            onTap: () {
-              _showConfirmDialog(
-                context,
-                'Ready For Pickup',
-                'Are you sure you want to mark this order as ready for pickup?',
-                () =>
-                    provider.orderReady(context, orderData.id, orderData.uuid),
-              );
-            },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (needsDeliveryAssignment)
+                PrimaryButton(
+                  title: 'Assign Delivery Partner',
+                  isLoading: false,
+                  onTap: () {
+                    _showAssignDeliveryBoySheet(context, provider, orderData);
+                  },
+                ),
+              if (needsDeliveryAssignment) const SizedBox(height: 12),
+              PrimaryButton(
+                title: 'Ready For Pickup',
+                isLoading: false,
+                onTap: () {
+                  _showConfirmDialog(
+                    context,
+                    'Ready For Pickup',
+                    'Are you sure you want to mark this order as ready for pickup?',
+                    () => provider.orderReady(
+                        context, orderData.id, orderData.uuid),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       );
@@ -1435,5 +1660,153 @@ class OrderDetailsScreen extends StatelessWidget {
       );
     }
     return const SizedBox.shrink();
+  }
+
+  Future<void> _showAssignDeliveryBoySheet(
+    BuildContext context,
+    OrderService provider,
+    CartModel orderData,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final vendorId = prefs.getString('token') ?? '';
+    if (vendorId.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to load vendor information')),
+        );
+      }
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final stream = FirebaseFirestore.instance
+            .collection('delivery_boys')
+            .where('vendor_id', isEqualTo: vendorId)
+            .where('is_active', isEqualTo: true)
+            .orderBy('created_at', descending: true)
+            .snapshots();
+
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Assign delivery partner',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Flexible(
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: stream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          'Failed to load delivery partners',
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                      );
+                    }
+                    final docs = snapshot.data?.docs ?? [];
+                    if (docs.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text(
+                          'No active delivery partners found.\nYou can add them from Profile → Delivery boys.',
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }
+
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: docs.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final data = docs[index].data();
+                        final id = docs[index].id;
+                        final name = (data['name'] ?? '').toString();
+                        final phone = (data['phone'] ?? '').toString();
+
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  AppColor.primary.withOpacity(0.12),
+                              child: const Icon(
+                                Icons.delivery_dining_rounded,
+                                color: AppColor.primary,
+                              ),
+                            ),
+                            title: Text(
+                              name.isEmpty
+                                  ? 'Unnamed delivery partner'
+                                  : name,
+                            ),
+                            subtitle: phone.isNotEmpty ? Text(phone) : null,
+                            onTap: () async {
+                              await provider.assignDeliveryBoy(
+                                context,
+                                orderData.id,
+                                orderData.uuid,
+                                id,
+                                deliveryBoyName: name,
+                              );
+                              if (context.mounted) {
+                                Navigator.of(ctx).pop();
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

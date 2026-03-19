@@ -54,6 +54,9 @@ class CartModel {
   double platformCharge;
   List<OrderedProduct> products;
 
+  /// Whether this order is an online delivery order.
+  bool isOnlineDelivery;
+
   CartModel(
       {required this.id,
       required this.uuid,
@@ -94,7 +97,8 @@ class CartModel {
       this.notes = '',
       this.packingFee = 0.0,
       this.platformCharge = 0.0,
-      this.preparationTimeMinutes = 0});
+      this.preparationTimeMinutes = 0,
+      this.isOnlineDelivery = false});
 
   factory CartModel.fromFirestore(Map<String, dynamic> data, String id) {
     return CartModel(
@@ -142,7 +146,8 @@ class CartModel {
         platformCharge: (data['platform_charge'] as num?)?.toDouble() ?? 0.0,
         preparationTimeMinutes: data['preparation_time'] != null
             ? int.tryParse(data['preparation_time'].toString()) ?? 0
-            : 0);
+            : 0,
+        isOnlineDelivery: (data['is_online_delivery'] as bool?) ?? false);
   }
 
   Map<String, dynamic> toMap() {
@@ -186,6 +191,7 @@ class CartModel {
       'platform_charge': platformCharge,
       'preparation_time': preparationTimeMinutes,
       'rating_text': ratingText,
+      'is_online_delivery': isOnlineDelivery,
     };
   }
 }

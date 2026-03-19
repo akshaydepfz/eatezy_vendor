@@ -4,6 +4,7 @@ import 'package:eatezy_vendor/view/auth/screens/login_screen.dart';
 import 'package:eatezy_vendor/view/chat/screens/chat_screen.dart';
 
 import 'package:eatezy_vendor/view/profile/screens/edit_profile_screen.dart';
+import 'package:eatezy_vendor/view/profile/screens/delivery_boys_screen.dart';
 import 'package:eatezy_vendor/view/profile/screens/my_earnings_screen.dart';
 import 'package:eatezy_vendor/view/profile/screens/reviews_screen.dart';
 import 'package:eatezy_vendor/view/profile/service/profile_service.dart';
@@ -70,6 +71,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 AppSpacing.h20,
+                if (provider.vendor?.isOnlineOrdering == true)
+                  ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DeliveryBoysScreen(),
+                        ),
+                      );
+                    },
+                    leading: Icon(
+                      Icons.delivery_dining_rounded,
+                      color: AppColor.primary,
+                    ),
+                    title: const Text(
+                      'Delivery boys',
+                      style: TextStyle(fontSize: 17),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                  ),
                 ListTile(
                   onTap: () {
                     Navigator.push(

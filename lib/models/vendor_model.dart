@@ -18,6 +18,9 @@ class VendorModel {
   final String banner;
   final String packingFee;
 
+  /// Whether this vendor accepts online ordering / delivery (backed by is_online_ordering).
+  final bool isOnlineOrdering;
+
   /// Optional fallback for old data.
   final String openingTime;
   final String closingTime;
@@ -62,6 +65,7 @@ class VendorModel {
       required this.long,
       required this.banner,
       required this.packingFee,
+      required this.isOnlineOrdering,
       required this.openingTime,
       required this.closingTime,
       this.openingHoursSlots = const []});
@@ -118,6 +122,7 @@ class VendorModel {
         long: data['long'] ?? '',
         banner: data['banner'] ?? '',
         packingFee: data['packing_fee']?.toString() ?? '0',
+        isOnlineOrdering: _parseBool(data['is_online_ordering'], false),
         openingTime: openingTime,
         closingTime: closingTime,
         openingHoursSlots: parsedSlots);

@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.eatezy_vendor.app"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "28.0.12433566"
 
     compileOptions {
